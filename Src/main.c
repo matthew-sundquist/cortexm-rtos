@@ -19,10 +19,41 @@
 #include <stdint.h>
 #include <stm32l4xx.h>
 
+#define SYSTICK_HZ 2
+
 void delay(volatile uint32_t count) {
     while (count--) {
         __NOP();
     }
+}
+
+typedef enum state {
+	BUSY,
+	IDLE
+} state;
+
+typedef struct process {
+	void *sp; // stack pointer
+	state proc_state;
+};
+
+void init_systick(int hz)
+{
+	SysTick->CTRL &= ~0x01;
+
+	SysTick->LOAD = (4000000/hz)-1;
+
+	SysTick->VAL &= ~0xFFF; // clear value reg
+
+	SysTick->CTRL |= 0x04; // processor clock
+	SysTick->CTRL |= 0x02; // enable exception
+
+	SysTick->CTRL |= 0x01; //enable systick
+}
+
+void SysTick_Handler(void)
+{
+	GPIOA->ODR ^= (1U << 5);
 }
 
 int main(void)
@@ -41,11 +72,9 @@ int main(void)
     GPIOA->OTYPER &= ~(1U << 5);
     GPIOA->PUPDR  &= ~(3U << (5 * 2));
 
+    init_systick(2);
+
     while (1)
     {
-        // Toggle LED
-        GPIOA->ODR ^= (1U << 5);
-
-        delay(100000);
     }
 }

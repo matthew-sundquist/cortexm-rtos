@@ -6,3 +6,4 @@
 *.prefs
 *.su
 Debug/
+*.launch
