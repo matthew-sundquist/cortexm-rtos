@@ -69,8 +69,15 @@ void SysTick_Handler(void)
 	// implement scheduler
 }
 
+void context_switch(process *old, process *new);
+
 int main(void)
 {
+	process task_1;
+	process task_2;
+
+	context_switch(&task_1, &task_2);
+
     // 1. Enable clock for GPIOA
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 
