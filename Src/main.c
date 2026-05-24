@@ -3,9 +3,10 @@
 #include <stdlib.h>
 
 #define SYSTICK_HZ 2
+#define STACK_SIZE 64
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
-int cur_task = 0;
+int cur_task = 2;
 
 void delay(volatile uint32_t count) {
     while (count--) {
@@ -37,11 +38,11 @@ uint32_t *sp1_ptr = &stack_1[32];
 process task_1;
 process task_2;
 
-__attribute__((aligned(8))) uint32_t task_1_stack[32];
-__attribute__((aligned(8))) uint32_t task_2_stack[32];
+__attribute__((aligned(8))) uint32_t task_1_stack[STACK_SIZE];
+__attribute__((aligned(8))) uint32_t task_2_stack[STACK_SIZE];
 
-uint32_t *task_1_sp = &task_1_stack[32];
-uint32_t *task_2_sp = &task_2_stack[32];
+uint32_t *task_1_sp = &task_1_stack[STACK_SIZE];
+uint32_t *task_2_sp = &task_2_stack[STACK_SIZE];
 
 
 uint32_t arg_1 = 0;
@@ -90,7 +91,18 @@ void init_systick(int hz)
 
 void SysTick_Handler(void)
 {
-	// implement scheduler
+	if (cur_task == 1)
+	{
+		next_process = &task_2;
+		cur_task = 2;
+	}
+	else
+	{
+		next_process = &task_1;
+		cur_task = 1;
+	}
+
+	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
 void turn_on_LED(void)
@@ -139,12 +151,9 @@ int main(void)
     GPIOA->OTYPER &= ~(1U << 5);
     GPIOA->PUPDR  &= ~(3U << (5 * 2));
 
-    //init_systick(SYSTICK_HZ);
+    init_systick(SYSTICK_HZ);
 
     next_process = &task_1;
-
-    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
-
 
     while (1)
     {
