@@ -4,6 +4,9 @@
 
 #define SYSTICK_HZ 2
 
+volatile uint8_t os_started = 0; // 0 for not running, 1 for running
+int cur_task = 0;
+
 void delay(volatile uint32_t count) {
     while (count--) {
         __NOP();
@@ -17,22 +20,41 @@ typedef enum state {
 } state;
 
 typedef struct {
-	void *sp; // stack pointer
+	uint32_t *sp; // stack pointer
 	state proc_state;
 	int priority;
-	void (*fn_ptr)(void*);
+	void (*fn_ptr)(void);
 
 	struct process* next; // next task
 } process;
 
+process *cur_process = NULL;
+process *next_process = NULL;
+
 uint32_t stack_1[32];
 uint32_t *sp1_ptr = &stack_1[32];
 
-void init_stack(uint32_t *sp, void (*entry)(void), void *arg)
+process task_1;
+process task_2;
+
+__attribute__((aligned(8))) uint32_t task_1_stack[32];
+__attribute__((aligned(8))) uint32_t task_2_stack[32];
+
+uint32_t *task_1_sp = &task_1_stack[32];
+uint32_t *task_2_sp = &task_2_stack[32];
+
+
+uint32_t arg_1 = 0;
+uint32_t arg_2 = 0;
+
+
+void start_task(uint32_t *sp);
+
+uint32_t* init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
 {
-	*(--sp) = 0x01000000; // pXSR
-	*(--sp) = (uint32_t)(entry); // pc
-	*(--sp) = (uint32_t)0; // LR
+	*(--sp) = 0x01000000; // pXSR (thumb bit set)
+	*(--sp) = (uint32_t)(entry); // PC
+	*(--sp) = (uint32_t)0xFFFFFFFD; // LR
 	*(--sp) = (uint32_t)0; // R12
 	*(--sp) = (uint32_t)0; // R3
 	*(--sp) = (uint32_t)0; // R2
@@ -47,6 +69,8 @@ void init_stack(uint32_t *sp, void (*entry)(void), void *arg)
 	*(--sp) = (uint32_t)0; // R6
 	*(--sp) = (uint32_t)0; // R5
 	*(--sp) = (uint32_t)0; // R4
+
+	return sp;
 }
 
 
@@ -69,14 +93,37 @@ void SysTick_Handler(void)
 	// implement scheduler
 }
 
-void context_switch(process *old, process *new);
+void turn_on_LED(void)
+{
+	while (1)
+	{
+		GPIOA->ODR = (1U << 5);
+	}
+}
+
+void turn_off_LED(void)
+{
+	while (1)
+	{
+		GPIOA->ODR = (0U << 5);
+	}
+}
 
 int main(void)
 {
-	process task_1;
-	process task_2;
+//	process task_1;
+//	process task_2;
+//
+//	context_switch(&task_1, &task_2);
 
-	context_switch(&task_1, &task_2);
+	// Disable FPU (CP10 and CP11 Full Access clear)
+	// This forces the CPU to use standard 8-word hardware stacking
+	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
+
+	task_1.fn_ptr = turn_on_LED;
+	task_2.fn_ptr = turn_off_LED;
+	task_1.sp = init_stack(task_1_sp, turn_on_LED, &arg_1);
+	task_2.sp = init_stack(task_2_sp, turn_off_LED, &arg_2);
 
     // 1. Enable clock for GPIOA
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -92,7 +139,12 @@ int main(void)
     GPIOA->OTYPER &= ~(1U << 5);
     GPIOA->PUPDR  &= ~(3U << (5 * 2));
 
-    init_systick(SYSTICK_HZ);
+    //init_systick(SYSTICK_HZ);
+
+    next_process = &task_1;
+
+    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
+
 
     while (1)
     {
