@@ -4,20 +4,23 @@
  *  Created on: May 24, 2026
  *      Author: Matthew Sundquist
  */
-
 #ifndef READY_LIST_H_
 #define READY_LIST_H_
+
+#include "tcb.h"
+#include "stdint.h"
 
 typedef struct ready_list
 {
 	tcb_t *head;
 	tcb_t *tail;
-	uint8_t len;
+	uint8_t size;
 } ready_list_t;
 
-int init_ready_list(ready_list *rl);
-int add_task(ready_list *rl, tcb_t *task);
-int shift_list(ready_list *rl);
+uint8_t init_ready_list(ready_list_t *rl); // init struct
+uint8_t add_task(ready_list_t *rl, tcb_t *task);
+uint8_t remove_task(ready_list_t *rl, char *name);
+uint8_t shift_list(ready_list_t *rl);
 
 
 
