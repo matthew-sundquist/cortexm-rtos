@@ -1,5 +1,5 @@
 /*
- * sheduler.h
+ * scheduler.h
  *
  *  Created on: May 27, 2026
  *      Author: Matthew Sundquist
@@ -23,6 +23,8 @@ typedef struct scheduler {
 
 uint8_t init_scheduler(scheduler_t* sch_inst, uint8_t num_priorities);
 uint8_t add_task(scheduler_t* sch_inst, tcb_t *task);
+uint8_t remove_task(scheduler_t* sch_inst, uint8_t priority);
+uint8_t select_task(scheduler_t* sch_inst);
 
 
 #endif /* SCHEDULER_H_ */
