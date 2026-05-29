@@ -58,8 +58,8 @@ uint8_t pop_task(ready_list_t *rl)
 
 	if (rl->size == 1)
 	{
-		rl->head == NULL;
-		rl->tail == NULL;
+		rl->head = NULL;
+		rl->tail = NULL;
 	}
 	else
 	{

@@ -1,8 +1,9 @@
 #include <stdint.h>
 #include <stm32l4xx.h>
 #include <stdlib.h>
+#include "scheduler.h"
 
-#define SYSTICK_HZ 2
+#define SYSTICK_HZ 10
 #define STACK_SIZE 64
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
@@ -14,29 +15,6 @@ void delay(volatile uint32_t count) {
     }
 }
 
-typedef enum state {
-	BUSY,
-	SLEEPING,
-	IDLE
-} state;
-
-typedef struct {
-	uint32_t *sp; // stack pointer
-	state proc_state;
-	int priority;
-	void (*fn_ptr)(void);
-
-	struct process* next; // next task
-} process;
-
-process *cur_process = NULL;
-process *next_process = NULL;
-
-uint32_t stack_1[32];
-uint32_t *sp1_ptr = &stack_1[32];
-
-process task_1;
-process task_2;
 
 __attribute__((aligned(8))) uint32_t task_1_stack[STACK_SIZE];
 __attribute__((aligned(8))) uint32_t task_2_stack[STACK_SIZE];
@@ -44,6 +22,9 @@ __attribute__((aligned(8))) uint32_t task_2_stack[STACK_SIZE];
 uint32_t *task_1_sp = &task_1_stack[STACK_SIZE];
 uint32_t *task_2_sp = &task_2_stack[STACK_SIZE];
 
+tcb_t task_1;
+
+tcb_t task_2;
 
 uint32_t arg_1 = 0;
 uint32_t arg_2 = 0;
@@ -89,20 +70,10 @@ void init_systick(int hz)
 	SysTick->CTRL |= 0x01; //enable systick
 }
 
-void SysTick_Handler(void)
+void SysTick_Handler()
 {
-	if (cur_task == 1)
-	{
-		next_process = &task_2;
-		cur_task = 2;
-	}
-	else
-	{
-		next_process = &task_1;
-		cur_task = 1;
-	}
-
-	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
+	scheduler_tick();
+	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; // deferred PendSV interrupt
 }
 
 void turn_on_LED(void)
@@ -121,22 +92,8 @@ void turn_off_LED(void)
 	}
 }
 
-int main(void)
+void gpio_setup(void)
 {
-//	process task_1;
-//	process task_2;
-//
-//	context_switch(&task_1, &task_2);
-
-	// Disable FPU (CP10 and CP11 Full Access clear)
-	// This forces the CPU to use standard 8-word hardware stacking
-	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
-
-	task_1.fn_ptr = turn_on_LED;
-	task_2.fn_ptr = turn_off_LED;
-	task_1.sp = init_stack(task_1_sp, turn_on_LED, &arg_1);
-	task_2.sp = init_stack(task_2_sp, turn_off_LED, &arg_2);
-
     // 1. Enable clock for GPIOA
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 
@@ -150,10 +107,33 @@ int main(void)
     // 3. Optional: push-pull (default), no pull-up/down
     GPIOA->OTYPER &= ~(1U << 5);
     GPIOA->PUPDR  &= ~(3U << (5 * 2));
+}
+
+int main(void)
+{
+//	process task_1;
+//	process task_2;
+//
+//	context_switch(&task_1, &task_2);
+
+	init_scheduler(5);
+
+	// Disable FPU (CP10 and CP11 Full Access clear)
+	// This forces the CPU to use standard 8-word hardware stacking
+	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
+
+	task_1.sp = init_stack(task_1_sp, turn_on_LED, &arg_1);
+	task_2.sp = init_stack(task_2_sp, turn_off_LED, &arg_2);
+
+	task_1.priority = 1;
+	task_2.priority = 1;
+
+	add_task(&task_1);
+	add_task(&task_2);
+
+	gpio_setup();
 
     init_systick(SYSTICK_HZ);
-
-    next_process = &task_1;
 
     while (1)
     {
