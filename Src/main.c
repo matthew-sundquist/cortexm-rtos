@@ -2,6 +2,7 @@
 #include <stm32l4xx.h>
 #include <stdlib.h>
 #include "scheduler.h"
+#include "task_stack.h"
 
 #define SYSTICK_HZ 10
 #define STACK_SIZE 64
@@ -28,33 +29,6 @@ tcb_t task_2;
 
 uint32_t arg_1 = 0;
 uint32_t arg_2 = 0;
-
-
-void start_task(uint32_t *sp);
-
-uint32_t* init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
-{
-	*(--sp) = 0x01000000; // pXSR (thumb bit set)
-	*(--sp) = (uint32_t)(entry); // PC
-	*(--sp) = (uint32_t)0xFFFFFFFD; // LR
-	*(--sp) = (uint32_t)0; // R12
-	*(--sp) = (uint32_t)0; // R3
-	*(--sp) = (uint32_t)0; // R2
-	*(--sp) = (uint32_t)0; // R1
-	*(--sp) = (uint32_t)arg; // R0
-
-	*(--sp) = (uint32_t)0; // R11
-	*(--sp) = (uint32_t)0; // R10
-	*(--sp) = (uint32_t)0; // R9
-	*(--sp) = (uint32_t)0; // R8
-	*(--sp) = (uint32_t)0; // R7
-	*(--sp) = (uint32_t)0; // R6
-	*(--sp) = (uint32_t)0; // R5
-	*(--sp) = (uint32_t)0; // R4
-
-	return sp;
-}
-
 
 void init_systick(int hz)
 {
