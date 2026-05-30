@@ -13,9 +13,9 @@ uint64_t num_scheduler_ticks = 0;
 uint8_t init_scheduler(uint8_t num_priorities)
 {
 
-	if (num_priorities > MAX_PRIORITIES)
+	if (num_priorities > MAX_PRIORITIES || num_priorities < 1)
 	{
-		return 2;
+		return 1;
 	}
 
 	sch_inst.num_priorities = num_priorities;
@@ -92,6 +92,11 @@ uint8_t select_task()
 	}
 
 	return 0;
+}
+
+tcb_t* get_cur_task()
+{
+	return sch_inst.cur_task;
 }
 
 void scheduler_tick()

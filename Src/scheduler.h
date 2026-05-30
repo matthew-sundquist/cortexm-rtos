@@ -31,6 +31,8 @@ uint8_t add_task(tcb_t *task);
 uint8_t remove_task(uint8_t priority);
 uint8_t select_task();
 
+tcb_t* get_cur_task();
+
 void scheduler_tick();
 
 

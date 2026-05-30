@@ -90,8 +90,8 @@ void gpio_setup(void)
 #include "unit_tests.h"
 int main(void)
 {
-	gpio_setup();
 	ready_lists_tests();
+	scheduler_tests();
 	while (1)
 	{
 
