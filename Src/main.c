@@ -4,7 +4,7 @@
 #include "scheduler.h"
 #include "task_stack.h"
 
-#define UNIT_TESTS
+//#define UNIT_TESTS
 #define SYSTICK_HZ 10
 #define STACK_SIZE 64
 
@@ -94,10 +94,10 @@ int main(void)
 	scheduler_tests();
 	while (1)
 	{
-
+		__BKPT(0); // passed
 	}
 }
-
+`
 #else
 int main(void)
 {
@@ -118,8 +118,8 @@ int main(void)
 	task_1.priority = 1;
 	task_2.priority = 1;
 
-	add_task(&task_1);
-	add_task(&task_2);
+	add_task_to_ready(&task_1);
+	add_task_to_ready(&task_2);
 
 	gpio_setup();
 

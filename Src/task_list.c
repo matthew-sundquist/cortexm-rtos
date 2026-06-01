@@ -1,8 +1,8 @@
-#include "ready_list.h"
 #include <stdlib.h>
 #include <string.h>
+#include "task_list.h"
 
-uint8_t init_ready_list(ready_list_t *rl)
+uint8_t init_task_list(task_list_t *rl)
 {
 	if (rl == NULL)
 	{
@@ -17,7 +17,7 @@ uint8_t init_ready_list(ready_list_t *rl)
 }
 
 
-uint8_t push_task(ready_list_t *rl, tcb_t *task)
+uint8_t push_task(task_list_t *rl, tcb_t *task)
 {
 	if (rl == NULL || task == NULL)
 	{
@@ -44,7 +44,7 @@ uint8_t push_task(ready_list_t *rl, tcb_t *task)
 	return 0;
 }
 
-uint8_t pop_task(ready_list_t *rl)
+uint8_t pop_task(task_list_t *rl)
 {
 	if (rl == NULL)
 	{

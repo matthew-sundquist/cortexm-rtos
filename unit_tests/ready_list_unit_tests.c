@@ -3,14 +3,14 @@
 #include <stm32l4xx.h>
 #include "unit_tests.h"
 #include "../src/tcb.h"
-#include "../src/ready_list.h"
+#include "../src/task_list.h"
 
 
 void ready_lists_tests()
 {
-	ready_list_t rl;
+	task_list_t rl;
 
-	init_ready_list(&rl);
+	init_task_list(&rl);
 
 	if (rl.head != NULL || rl.tail != NULL || rl.size != 0)
 	{

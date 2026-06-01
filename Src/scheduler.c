@@ -8,7 +8,8 @@ static scheduler_t sch_inst;
 
 tcb_t* cur_process = NULL;
 tcb_t* next_process = NULL;
-uint64_t num_scheduler_ticks = 0;
+uint64_t sch_ticks = 0;
+
 
 uint8_t init_scheduler(uint8_t num_priorities)
 {
@@ -24,13 +25,15 @@ uint8_t init_scheduler(uint8_t num_priorities)
 
 	for (int i = 0; i < num_priorities; i++)
 	{
-		init_ready_list(&(sch_inst.ready_lists[i]));
+		init_task_list(&(sch_inst.ready_lists[i]));
 	}
+
+	init_task_list(&(sch_inst.blocked_list));
 
 	return 0;
 }
 
-uint8_t add_task(tcb_t *task)
+uint8_t add_task_to_ready(tcb_t *task)
 {
 	if (task == NULL)
 	{
@@ -47,13 +50,15 @@ uint8_t add_task(tcb_t *task)
 		return 3;
 	}
 
+	task->state = READY;
+
 	sch_inst.ready_bitmap |= (1U << task->priority); // task is assumed to be ready when added
 
 	return 0;
 }
 
 // removes from front
-uint8_t remove_task(uint8_t priority)
+uint8_t remove_task_from_ready(uint8_t priority)
 {
 
 	if (priority > sch_inst.num_priorities - 1)
@@ -74,6 +79,17 @@ uint8_t remove_task(uint8_t priority)
 	return 0;
 }
 
+uint8_t add_task_to_blocked(tcb_t *task)
+{
+	if (task == NULL)
+	{
+		return 1;
+	}
+
+
+	return 0;
+}
+
 uint8_t select_task()
 {
 
@@ -86,10 +102,12 @@ uint8_t select_task()
 
 	sch_inst.cur_task = sch_inst.ready_lists[prio].head;
 
-	if (remove_task(prio) != 0) // updates bitmap
+	if (remove_task_from_ready(prio) != 0) // updates bitmap
 	{
 		return 2; // BAD, SCHEDULER IN WEIRD STATE
 	}
+
+	sch_inst.cur_task->state = RUNNING;
 
 	return 0;
 }
@@ -101,7 +119,7 @@ tcb_t* get_cur_task()
 
 void scheduler_tick()
 {
-	add_task(sch_inst.cur_task); // put the current running task back to ready
+	add_task_to_ready(sch_inst.cur_task); // put the current running task back to ready
 
 	uint8_t state = select_task(); // put the highest priority ready task into cur_task
 	if (state == 1)
@@ -117,6 +135,6 @@ void scheduler_tick()
 		next_process = sch_inst.cur_task; // set next process
 	}
 
-	num_scheduler_ticks++;
+	sch_ticks++;
 }
 
