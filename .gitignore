@@ -6,5 +6,9 @@
 *.prefs
 *.su
 Debug/
+Release/
 *.launch
 *.xml
+*.cproject
+*.xml
+
