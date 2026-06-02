@@ -15,7 +15,7 @@ void init_task_queue(task_queue_t *tq)
 }
 
 // push to tail
-void push_task(task_queue_t *tq, tcb_t *task)
+void task_push(task_queue_t *tq, tcb_t *task)
 {
 	ASSERT(tq != NULL);
 	ASSERT(task != NULL);
@@ -39,7 +39,7 @@ void push_task(task_queue_t *tq, tcb_t *task)
 }
 
 // pop from head
-tcb_t *pop_task(task_queue_t *tq)
+tcb_t *task_pop(task_queue_t *tq)
 {
 	ASSERT(tq != NULL);
 
@@ -67,7 +67,7 @@ tcb_t *pop_task(task_queue_t *tq)
 	return task;
 }
 
-void remove_task(task_queue_t *tq, tcb_t *task)
+void task_remove(task_queue_t *tq, tcb_t *task)
 {
 	ASSERT(tq != NULL);
 	ASSERT(task != NULL);

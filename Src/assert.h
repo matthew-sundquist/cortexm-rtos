@@ -1,5 +1,5 @@
 
-
+#include <stm32l4xx.h>
 #ifdef DEBUG
 #define ASSERT(x)			\
 	do 						\

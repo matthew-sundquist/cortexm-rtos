@@ -10,7 +10,6 @@
 
 
 #include <stdint.h>
-
 #include "task_queue.h"
 #include "tcb.h"
 
@@ -25,6 +24,7 @@ typedef struct scheduler {
 	tcb_t *cur_task;
 	task_queue_t ready_lists[MAX_PRIORITIES];
 	task_queue_t blocked_list;
+	task_queue_t delayed_list;
 	uint8_t num_priorities;
 	uint32_t ready_bitmap;
 } scheduler_t;
@@ -48,6 +48,9 @@ tcb_t *task_pop_ready(uint8_t priority);
 
 void task_block(tcb_t *task);
 void task_unblock(tcb_t *task);
+
+void task_delay(tcb_t *task);
+void task_wake(tcb_t *task);
 
 
 #ifdef DEBUG

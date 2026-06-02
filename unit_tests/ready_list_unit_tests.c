@@ -3,14 +3,14 @@
 #include <stm32l4xx.h>
 #include "unit_tests.h"
 #include "../src/tcb.h"
-#include "../src/task_list.h"
+#include "../src/task_queue.h"
 
 
 void ready_lists_tests()
 {
 	task_list_t rl;
 
-	init_task_list(&rl);
+	init_task_queue(&rl);
 
 	if (rl.head != NULL || rl.tail != NULL || rl.size != 0)
 	{
@@ -22,7 +22,7 @@ void ready_lists_tests()
 
 	tcb_t t3;
 
-	if (push_task(&rl, &t1) != 0)
+	if (task_push(&rl, &t1) != 0)
 	{
 		__BKPT(0);
 	}
@@ -33,17 +33,17 @@ void ready_lists_tests()
 	}
 
 
-	if (pop_task(&rl) != 0)
+	if (task_pop(&rl) != 0)
 	{
 		__BKPT(0);
 	}
 
-	if (pop_task(&rl) != 2)
+	if (task_pop(&rl) != 2)
 	{
 		__BKPT(0);
 	}
 
-	if (push_task(&rl, &t1) != 0 || push_task(&rl, &t2) != 0 || push_task(&rl, &t3) != 0)
+	if (task_push(&rl, &t1) != 0 || task_push(&rl, &t2) != 0 || task_push(&rl, &t3) != 0)
 	{
 		__BKPT(0);
 	}

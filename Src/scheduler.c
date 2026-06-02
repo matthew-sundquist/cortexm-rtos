@@ -1,4 +1,8 @@
-
+/**
+ *
+ * In the future consider turning this into a state machine
+ *
+ */
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -30,21 +34,22 @@ bool init_scheduler(uint8_t num_priorities)
 	}
 
 	init_task_queue(&(sch_inst.blocked_list));
+	init_task_queue(&(sch_inst.delayed_list));
 
 	return true;
 }
 
+// only function to set task->state = READY
 void task_add_ready(tcb_t *task)
 {
 	ASSERT(task != NULL);
-	ASSERT(task->priority < sch_inst.num_priorties);
+	ASSERT(task->priority < sch_inst.num_priorities);
 
-	push_task(&(sch_inst.ready_lists[task->priority]), task);
+	task_push(&(sch_inst.ready_lists[task->priority]), task);
 
 	task->state = READY;
 
-	sch_inst.ready_bitmap |= (1U << task->priority); // task is assumed to be ready when added
-
+	sch_inst.ready_bitmap |= (1U << task->priority); // task is ready when added
 }
 
 tcb_t *task_pop_ready()
@@ -58,7 +63,7 @@ tcb_t *task_pop_ready()
 
 	ASSERT(priority < sch_inst.num_priorities);
 
-	tcb_t *task = pop_task(&(sch_inst.ready_lists[priority]));
+	tcb_t *task = task_pop(&(sch_inst.ready_lists[priority]));
 
 	if (sch_inst.ready_lists[priority].size == 0)
 	{
@@ -68,18 +73,62 @@ tcb_t *task_pop_ready()
 	return task;
 }
 
+// only function to set task->state = BLOCKED
+// assuming you can only call task_block on a ready task
 void task_block(tcb_t *task)
 {
 	ASSERT(task != NULL);
+	ASSERT(task->state == READY);
 
-	push_task(&(sch_inst.blocked_list), task);
+	task_remove(&(sch_inst.ready_lists[task->priority]), task);
+
+	if (sch_inst.ready_lists[task->priority].size == 0)
+	{
+		sch_inst.ready_bitmap &= ~(1U << task->priority);
+	}
 
 	task->state = BLOCKED;
+
+	task_push(&(sch_inst.blocked_list), task);
 }
 
-tcb_t *task_remove_blocked()
+void task_unblock(tcb_t *task)
 {
-	return pop_task(&(sch_inst.blocked_list));
+	ASSERT(task != NULL);
+	ASSERT(task->state == BLOCKED);
+
+	task_remove(&(sch_inst.blocked_list), task);
+
+	task_add_ready(task); // sets state = ready
+}
+
+// assumes task is ready when called
+// only function to set state = DELAYED
+void task_delay(tcb_t *task)
+{
+	ASSERT(task != NULL);
+	ASSERT(task->state == READY);
+
+	task_remove(&(sch_inst.ready_lists[task->priority]), task);
+
+	if (sch_inst.ready_lists[task->priority].size == 0)
+	{
+		sch_inst.ready_bitmap &= ~(1U << task->priority);
+	}
+
+	task->state = DELAYED;
+
+	task_push(&(sch_inst.delayed_list), task);
+}
+
+void task_wake(tcb_t *task)
+{
+	ASSERT(task != NULL);
+	ASSERT(task->state == DELAYED);
+
+	task_remove(&(sch_inst.delayed_list), task);
+
+	task_add_ready(task);
 }
 
 #ifdef DEBUG
@@ -91,21 +140,15 @@ tcb_t* get_cur_task()
 
 void scheduler_tick()
 {
-	add_task_to_ready(sch_inst.cur_task); // put the current running task back to ready
+	task_add_ready(sch_inst.cur_task); // put the current running task back to ready
 
-	uint8_t state = select_task(); // put the highest priority ready task into cur_task
-	if (state == 1)
-	{
-		// no tasks ready : do not switch task
-	}
-	else if (state == 2)
-	{
-		// weird state : somehow recover?
-	}
-	else
-	{
-		next_process = sch_inst.cur_task; // set next process
-	}
+	tcb_t *task = select_task(); // put the highest priority ready task into cur_task
+
+	sch_inst.cur_task = task;
+
+	task->state = RUNNING;
+
+	next_process = task; // the thing the scheduler pulls in to switch to
 
 	sch_ticks++;
 }

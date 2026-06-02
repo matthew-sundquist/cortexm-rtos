@@ -6,7 +6,8 @@
 typedef enum {
 	READY,
 	RUNNING,
-	BLOCKED
+	BLOCKED,
+	DELAYED
 } task_state_t;
 
 typedef struct tcb {

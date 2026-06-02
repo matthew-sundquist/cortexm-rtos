@@ -18,9 +18,9 @@ typedef struct task_queue
 } task_queue_t;
 
 void init_task_queue(task_queue_t *tq); // init struct
-void push_task(task_queue_t *tq, tcb_t *task);
-tcb_t *pop_task(task_queue_t *tq); // pops from task
-void remove_task(task_queue_t *tq, tcb_t *task);
+void task_push(task_queue_t *tq, tcb_t *task);
+tcb_t *task_pop(task_queue_t *tq); // pops from task
+void task_remove(task_queue_t *tq, tcb_t *task);
 
 
 #endif /* TASK_LIST_H_ */

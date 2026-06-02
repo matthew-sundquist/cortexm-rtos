@@ -4,7 +4,7 @@
 #include "unit_tests.h"
 #include "../src/tcb.h"
 #include "../src/scheduler.h"
-#include "../src/task_list.h"
+#include "../src/task_queue.h"
 
 void scheduler_tests()
 {
@@ -16,7 +16,7 @@ void scheduler_tests()
 	t2.priority = 1;
 	t3.priority = 1;
 
-	if (init_scheduler(0) != 1 || init_scheduler(-1) != 1) // -1 overflow to highest allowed priority
+	if (init_scheduler(0) != true || init_scheduler(-1) != 1) // -1 overflow to highest allowed priority
 	{
 		__BKPT(0);
 	}
@@ -31,12 +31,12 @@ void scheduler_tests()
 		__BKPT(0);
 	}
 
-	if (add_task_to_ready(NULL) != 1)
+	if (task_add_ready(NULL) != 1)
 	{
 		__BKPT(0);
 	}
 
-	if (add_task_to_ready(&t1) != 0)
+	if (task_add_ready(&t1) != 0)
 	{
 		__BKPT(0);
 	}
@@ -51,34 +51,34 @@ void scheduler_tests()
 		__BKPT(0);
 	}
 
-	if (remove_task_from_ready(1) != 3)
+	if (task_remove_from_ready(1) != 3)
 	{
 		__BKPT(0);
 	}
 
-	if (add_task_to_ready(&t2) != 0 || add_task_to_ready(&t3) != 0)
+	if (task_add_ready(&t2) != 0 || task_add_ready(&t3) != 0)
 	{
 		__BKPT(0);
 	}
 
-	if (remove_task_from_ready(1) != 0)
+	if (task_remove_from_ready(1) != 0)
 	{
 		__BKPT(0);
 	}
 
-	if (remove_task_from_ready(1) != 0)
+	if (task_remove_from_ready(1) != 0)
 	{
 		__BKPT(0);
 	}
 
-	if (remove_task_from_ready(1) != 3)
+	if (task_remove_from_ready(1) != 3)
 	{
 		__BKPT(0);
 	}
 
-	add_task_to_ready(&t2);
+	task_add_ready(&t2);
 
-	if (remove_task_from_ready(3) != 3)
+	if (task_remove_from_ready(3) != 3)
 	{
 		__BKPT(0);
 	}
@@ -87,14 +87,14 @@ void scheduler_tests()
 
 	t4.priority = 10;
 
-	if (add_task_to_ready(&t4) != 2)
+	if (task_add_ready(&t4) != 2)
 	{
 		__BKPT(0);
 	}
 
 	t4.priority = 4;
 
-	if (add_task_to_ready(&t4) != 0)
+	if (task_add_ready(&t4) != 0)
 	{
 		__BKPT(0);
 	}
@@ -103,7 +103,7 @@ void scheduler_tests()
 
 	t5.priority = 3;
 
-	add_task_to_ready(&t5);
+	task_add_ready(&t5);
 
 	if (select_task() != 0)
 	{
