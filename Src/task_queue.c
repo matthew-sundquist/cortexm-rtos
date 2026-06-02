@@ -66,3 +66,36 @@ tcb_t *pop_task(task_queue_t *tq)
 
 	return task;
 }
+
+void remove_task(task_queue_t *tq, tcb_t *task)
+{
+	ASSERT(tq != NULL);
+	ASSERT(task != NULL);
+	ASSERT(tq->size > 0);
+
+	if (tq->head == task)
+	{
+		tq->head = task->next;
+	}
+
+	if (tq->tail == task)
+	{
+		tq->tail = task->prev;
+	}
+
+	if (task->prev != NULL)
+	{
+		task->prev->next = task->next;
+	}
+
+	if (task->next != NULL)
+	{
+		task->next->prev = task->prev;
+	}
+
+	tq->size--;
+
+	task->next = NULL;
+	task->prev = NULL;
+}
+
