@@ -17,6 +17,7 @@ typedef struct tcb {
 	task_state_t state;
 
 	struct tcb *next;
+	struct tcb *prev;
 } tcb_t;
 
 #endif
