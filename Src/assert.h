@@ -9,6 +9,7 @@ extern uint32_t num_errors;
 		if (!(x))			\
 		{					\
 			num_errors++;	\
+			__BKPT(0);		\
 		}					\
 	} while (0)
 #elif DEBUG

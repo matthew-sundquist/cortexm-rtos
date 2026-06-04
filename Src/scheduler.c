@@ -15,20 +15,13 @@ tcb_t* cur_process = NULL;
 tcb_t* next_process = NULL;
 uint64_t sch_ticks = 0;
 
-
-bool init_scheduler(uint8_t num_priorities)
+void init_scheduler()
 {
 
-	if (num_priorities > MAX_PRIORITIES || num_priorities < 1)
-	{
-		return false;
-	}
-
-	sch_inst.num_priorities = num_priorities;
 	sch_inst.ready_bitmap = 0;
 	sch_inst.cur_task = NULL;
 
-	for (int i = 0; i < num_priorities; i++)
+	for (int i = 0; i < MAX_PRIORITIES; i++)
 	{
 		init_task_queue(&(sch_inst.ready_lists[i]));
 	}
@@ -36,14 +29,13 @@ bool init_scheduler(uint8_t num_priorities)
 	init_task_queue(&(sch_inst.blocked_list));
 	init_task_queue(&(sch_inst.delayed_list));
 
-	return true;
 }
 
 // only function to set task->state = READY
 void task_add_ready(tcb_t *task)
 {
 	ASSERT(task != NULL);
-	ASSERT(task->priority < sch_inst.num_priorities);
+	ASSERT(task->priority < MAX_PRIORITIES);
 
 	task_push(&(sch_inst.ready_lists[task->priority]), task);
 
@@ -61,7 +53,7 @@ tcb_t *task_pop_ready()
 
 	uint32_t priority = 31 - __builtin_clz(sch_inst.ready_bitmap);
 
-	ASSERT(priority < sch_inst.num_priorities);
+	ASSERT(priority < MAX_PRIORITIES);
 
 	tcb_t *task = task_pop(&(sch_inst.ready_lists[priority]));
 
@@ -135,6 +127,11 @@ void task_wake(tcb_t *task)
 tcb_t* get_cur_task()
 {
 	return sch_inst.cur_task;
+}
+
+scheduler_t *get_scheduler()
+{
+	return &sch_inst;
 }
 #endif
 
