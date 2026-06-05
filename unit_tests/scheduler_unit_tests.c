@@ -186,6 +186,35 @@ void test_task_delay()
 	ASSERT(task_1.state == DELAYED);
 }
 
+void test_task_wake()
+{
+	init_scheduler(); // re-init the scheduler, get a clean state
+
+	tcb_t task_1;
+	task_1.priority = 1;
+
+	task_add_ready(&task_1);
+
+	task_delay(&task_1);
+
+	task_wake(&task_1);
+
+	scheduler_t *s = get_scheduler();
+
+	ASSERT(s->delayed_list.size == 0);
+	ASSERT(s->blocked_list.head == NULL);
+	ASSERT(s->blocked_list.tail == NULL);
+
+	ASSERT(s->ready_lists[task_1.priority].size == 1);
+	ASSERT(s->ready_lists[task_1.priority].head == &task_1);
+	ASSERT(s->ready_lists[task_1.priority].tail == &task_1);
+	ASSERT(s->ready_bitmap == 0x02);
+
+	ASSERT(task_1.state == READY);
+
+
+}
+
 test_case_t scheduler_test_cases[] =
 {
 		{"scheduler init", test_scheduler_init},
@@ -193,7 +222,8 @@ test_case_t scheduler_test_cases[] =
 		{"task pop ready", test_task_pop_ready},
 		{"task block", test_task_block},
 		{"task unblock", test_task_unblock},
-		{"task block", test_task_delay}
+		{"task block", test_task_delay},
+		{"task wake", test_task_wake}
 
 };
 
