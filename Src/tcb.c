@@ -1,6 +1,7 @@
 
 #include "tcb.h"
 #include "string.h"
+#include <stm32l4xx.h>
 
 uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
 {
@@ -27,17 +28,22 @@ uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
 
 
 // sp just needs to be allocated memory pointing to the lowest memory address of the stack (bottom)
-void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name)
+void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name, uint32_t pid)
 {
 
+	__disable_irq(); // if this is not disabled two processes could be created with the same PID
 	*task = (tcb_t){
 			.sp = init_stack(sp, entry, arg),
 			.priority = priority,
 			.state = NONE,
 			.wake_tick = 0,
 			.prev = NULL,
-			.next = NULL
+			.next = NULL,
+			.pid = pid
 	};
+
+	pid++;
+	__enable_irq();
 
 	strncpy(task->name, name, sizeof(task->name));
 
