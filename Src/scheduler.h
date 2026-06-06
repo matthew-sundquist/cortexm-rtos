@@ -32,12 +32,10 @@ typedef struct scheduler {
 void task_add_ready(tcb_t *task);
 tcb_t *task_pop_ready();
 
-void task_block(tcb_t *task);
+void task_block(tcb_t *task, task_state_t state);
 void task_unblock(tcb_t *task);
 
-void task_delay(tcb_t *task);
-void task_wake(tcb_t *task);
-
+void task_sleep(uint32_t ticks_asleep);
 
 #ifdef DEBUG
 tcb_t* get_cur_task();

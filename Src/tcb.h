@@ -16,6 +16,7 @@ typedef struct tcb {
 	char name[16];
 
 	task_state_t state;
+	uint32_t wake_tick;
 
 	struct tcb *next;
 	struct tcb *prev;

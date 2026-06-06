@@ -13,7 +13,7 @@ static scheduler_t sch_inst;
 
 tcb_t* cur_process = NULL;
 tcb_t* next_process = NULL;
-uint64_t sch_ticks = 0;
+uint32_t sch_ticks = 0;
 
 void init_scheduler()
 {
@@ -37,11 +37,14 @@ void task_add_ready(tcb_t *task)
 	ASSERT(task != NULL);
 	ASSERT(task->priority < MAX_PRIORITIES);
 
+	__disable_irq();
 	task_push(&(sch_inst.ready_lists[task->priority]), task);
 
 	task->state = READY;
 
 	sch_inst.ready_bitmap |= (1U << task->priority); // task is ready when added
+
+	__enable_irq();
 }
 
 tcb_t *task_pop_ready()
@@ -55,73 +58,66 @@ tcb_t *task_pop_ready()
 
 	ASSERT(priority < MAX_PRIORITIES);
 
+	__disable_irq();
 	tcb_t *task = task_pop(&(sch_inst.ready_lists[priority]));
 
 	if (sch_inst.ready_lists[priority].size == 0)
 	{
 		sch_inst.ready_bitmap &= ~(1U << priority); // remove from ready list
 	}
+	__enable_irq();
 
 	return task;
 }
 
-// only function to set task->state = BLOCKED
-// assuming you can only call task_block on a ready task
-void task_block(tcb_t *task)
+
+// changes task state to state, removes from ready list if it contains it
+void task_block(tcb_t *task, task_state_t state)
 {
 	ASSERT(task != NULL);
-	ASSERT(task->state == READY);
 
-	task_remove(&(sch_inst.ready_lists[task->priority]), task);
-
-	if (sch_inst.ready_lists[task->priority].size == 0)
+	__disable_irq();
+	if (task->state == READY)
 	{
-		sch_inst.ready_bitmap &= ~(1U << task->priority);
+		task_remove(&(sch_inst.ready_lists[task->priority]), task);
+
+		if (sch_inst.ready_lists[task->priority].size == 0)
+		{
+			sch_inst.ready_bitmap &= ~(1U << task->priority);
+		}
 	}
 
-	task->state = BLOCKED;
+	task->state = state;
+	__enable_irq();
 
-	task_push(&(sch_inst.blocked_list), task);
 }
 
+// moves task from blocked state to the ready list
 void task_unblock(tcb_t *task)
 {
 	ASSERT(task != NULL);
-	ASSERT(task->state == BLOCKED);
-
-	task_remove(&(sch_inst.blocked_list), task);
 
 	task_add_ready(task); // sets state = ready
 }
 
-// assumes task is ready when called
-// only function to set state = DELAYED
-void task_delay(tcb_t *task)
+// assumes task being put to sleep is currently running
+void task_sleep(uint32_t ticks_asleep)
 {
-	ASSERT(task != NULL);
-	ASSERT(task->state == READY);
 
-	task_remove(&(sch_inst.ready_lists[task->priority]), task);
+	__disable_irq();
 
-	if (sch_inst.ready_lists[task->priority].size == 0)
-	{
-		sch_inst.ready_bitmap &= ~(1U << task->priority);
-	}
+	sch_inst.cur_task->wake_tick = sch_ticks + ticks_asleep;
 
-	task->state = DELAYED;
+	task_push(&(sch_inst.delayed_list), sch_inst.cur_task);
 
-	task_push(&(sch_inst.delayed_list), task);
+	sch_inst.cur_task->state = DELAYED;
+
+	__enable_irq();
+
+	scheduler_tick();
 }
 
-void task_wake(tcb_t *task)
-{
-	ASSERT(task != NULL);
-	ASSERT(task->state == DELAYED);
 
-	task_remove(&(sch_inst.delayed_list), task);
-
-	task_add_ready(task);
-}
 
 #ifdef DEBUG
 tcb_t* get_cur_task()
