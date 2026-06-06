@@ -3,6 +3,8 @@
 #include "string.h"
 #include <stm32l4xx.h>
 
+uint32_t pid = 1;
+
 uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
 {
 	*(--sp) = 0x01000000; // pXSR (thumb bit set)
@@ -28,7 +30,7 @@ uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg)
 
 
 // sp just needs to be allocated memory pointing to the lowest memory address of the stack (bottom)
-void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name, uint32_t pid)
+void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name)
 {
 
 	__disable_irq(); // if this is not disabled two processes could be created with the same PID

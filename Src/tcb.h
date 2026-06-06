@@ -4,6 +4,8 @@
 #include "stdint.h"
 #define STACK_SIZE 256
 
+extern uint32_t pid;
+
 typedef enum {
 	READY,
 	RUNNING,
@@ -26,7 +28,7 @@ typedef struct tcb {
 	struct tcb *prev;
 } tcb_t;
 
-void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name, uint32_t pid);
+void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name);
 
 uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg);
 
