@@ -4,6 +4,8 @@
 #include "scheduler.h"
 #include "task.h"
 #include "config.h"
+#include "assert.h"
+#include "string.h"
 
 #ifdef UNIT_TESTS
 #include "unit_tests.h"
@@ -11,7 +13,7 @@ uint32_t num_errors = 0;
 #endif
 
 //#define UNIT_TESTS
-#define SYSTICK_HZ 10
+#define SYSTICK_HZ 1
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
 int cur_task = 2;
@@ -53,11 +55,11 @@ void init_systick(int hz)
 void SysTick_Handler()
 {
 	scheduler_tick();
-	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; // deferred PendSV interrupt
 }
 
 void turn_on_LED(void)
 {
+	scheduler_t *t = get_scheduler();
 	while (1)
 	{
 		GPIOA->ODR = (1U << 5);
@@ -66,9 +68,11 @@ void turn_on_LED(void)
 
 void turn_off_LED(void)
 {
+	scheduler_t *t = get_scheduler();
 	while (1)
 	{
 		GPIOA->ODR = (0U << 5);
+		task_sleep(10);
 	}
 }
 
@@ -110,8 +114,10 @@ int main(void)
 	// This forces the CPU to use standard 8-word hardware stacking
 	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
 
-	task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
-	task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
+	int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
+	status += task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
+
+	ASSERT(status == 0);
 
 	gpio_setup();
 

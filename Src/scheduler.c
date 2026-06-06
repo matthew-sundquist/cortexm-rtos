@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "scheduler.h"
 #include "assert.h"
+#include <stdio.h>
 
 static scheduler_t sch_inst;
 
@@ -100,17 +101,20 @@ void task_unblock(tcb_t *task)
 	task_add_ready(task); // sets state = ready
 }
 
-// assumes task being put to sleep is currently running
 void task_sleep(uint32_t ticks_asleep)
 {
+
+	ASSERT(sch_inst.cur_task != NULL);
 
 	__disable_irq();
 
 	sch_inst.cur_task->wake_tick = sch_ticks + ticks_asleep;
 
-	task_push(&(sch_inst.delayed_list), sch_inst.cur_task);
+	ASSERT(sch_inst.cur_task->state == RUNNING);
 
 	task_block(sch_inst.cur_task, DELAYED);
+
+	task_push(&(sch_inst.delayed_list), sch_inst.cur_task);
 
 	__enable_irq();
 
@@ -183,7 +187,7 @@ void scheduler_tick()
 
 	if (sch_inst.cur_task == NULL)
 	{
-		ASSERT(1); // put into breakpoint
+		ASSERT(0); // put into breakpoint
 	}
 
 	next_process = sch_inst.cur_task;
@@ -193,5 +197,7 @@ void scheduler_tick()
 	sch_ticks++;
 
 	__enable_irq();
+
+	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk; // deferred PendSV interrupt
 }
 

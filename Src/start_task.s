@@ -19,7 +19,7 @@ PendSV_Handler:
     BNE save_state // already started
 
     MOVS r1, #1
-    STR r1, [r0]
+    STR r1, [r0] // load OS started
 
 	// need these for increment_process
     LDR r0, =cur_process // &cur_process

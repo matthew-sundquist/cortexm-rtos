@@ -2,7 +2,7 @@
 #define TCB_H
 
 #include "stdint.h"
-#define STACK_SIZE 128
+#define STACK_SIZE 256
 
 typedef enum {
 	READY,
