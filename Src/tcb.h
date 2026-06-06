@@ -2,12 +2,14 @@
 #define TCB_H
 
 #include "stdint.h"
+#define STACK_SIZE 128
 
 typedef enum {
 	READY,
 	RUNNING,
 	BLOCKED,
-	DELAYED
+	DELAYED,
+	NONE
 } task_state_t;
 
 typedef struct tcb {
@@ -21,5 +23,9 @@ typedef struct tcb {
 	struct tcb *next;
 	struct tcb *prev;
 } tcb_t;
+
+void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority, uint32_t *sp, char *name);
+
+uint32_t *init_stack(uint32_t *sp, void (*entry)(void), uint32_t *arg);
 
 #endif

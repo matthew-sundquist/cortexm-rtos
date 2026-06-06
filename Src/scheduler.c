@@ -110,13 +110,37 @@ void task_sleep(uint32_t ticks_asleep)
 
 	task_push(&(sch_inst.delayed_list), sch_inst.cur_task);
 
-	sch_inst.cur_task->state = DELAYED;
+	task_block(sch_inst.cur_task, DELAYED);
 
 	__enable_irq();
 
 	scheduler_tick();
 }
 
+void scheduler_handle_blocked()
+{
+	__disable_irq();
+
+	tcb_t *walker = sch_inst.delayed_list.head;
+	tcb_t *next = NULL;
+
+	while (walker != NULL)
+	{
+		next = walker->next;
+
+		if (walker->wake_tick <= sch_ticks)
+		{
+			task_remove(&(sch_inst.delayed_list), walker);
+
+			task_unblock(walker);
+
+		}
+
+		walker = next;
+	}
+
+	__enable_irq();
+}
 
 
 #ifdef DEBUG
@@ -129,20 +153,45 @@ scheduler_t *get_scheduler()
 {
 	return &sch_inst;
 }
+
+uint32_t *get_ticks()
+{
+	return &sch_ticks;
+}
 #endif
 
 void scheduler_tick()
 {
-	task_add_ready(sch_inst.cur_task); // put the current running task back to ready
 
-	tcb_t *task = task_pop_ready(); // put the highest priority ready task into cur_task
+	scheduler_handle_blocked();
 
-	sch_inst.cur_task = task;
+	/*
+	 * If task is not in the running state, it has been either been put to sleep, or is waiting on a semaphore/mutex,
+	 * in which case, it has already been placed in the respective list
+	 * Therefor if it is running, we can assume that it is still in the READY state,
+	 * meaning it can be put back into the ready list
+	 */
 
-	task->state = RUNNING;
+	__disable_irq();
 
-	next_process = task; // the thing the scheduler pulls in to switch to
+	if (sch_inst.cur_task->state == RUNNING)
+	{
+		task_add_ready(sch_inst.cur_task);
+	}
+
+	sch_inst.cur_task = task_pop_ready();
+
+	if (sch_inst.cur_task == NULL)
+	{
+		ASSERT(1); // put into breakpoint
+	}
+
+	next_process = sch_inst.cur_task;
+
+	sch_inst.cur_task->state = RUNNING;
 
 	sch_ticks++;
+
+	__enable_irq();
 }
 

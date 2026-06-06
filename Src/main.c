@@ -2,7 +2,7 @@
 #include <stm32l4xx.h>
 #include <stdlib.h>
 #include "scheduler.h"
-#include "task_stack.h"
+#include "task.h"
 #include "config.h"
 
 #ifdef UNIT_TESTS
@@ -12,7 +12,6 @@ uint32_t num_errors = 0;
 
 //#define UNIT_TESTS
 #define SYSTICK_HZ 10
-#define STACK_SIZE 64
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
 int cur_task = 2;
@@ -104,25 +103,15 @@ int main(void)
 #else
 int main(void)
 {
-//	process task_1;
-//	process task_2;
-//
-//	context_switch(&task_1, &task_2);
 
-	init_scheduler(5);
+	init_scheduler();
 
 	// Disable FPU (CP10 and CP11 Full Access clear)
 	// This forces the CPU to use standard 8-word hardware stacking
 	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
 
-	task_1.sp = init_stack(task_1_sp, turn_on_LED, &arg_1);
-	task_2.sp = init_stack(task_2_sp, turn_off_LED, &arg_2);
-
-	task_1.priority = 1;
-	task_2.priority = 1;
-
-	task_add_ready(&task_1);
-	task_add_ready(&task_2);
+	task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
+	task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
 
 	gpio_setup();
 
@@ -130,7 +119,6 @@ int main(void)
 
     while (1)
     {
-    	//GPIOA->ODR ^= (1U << 5);
     }
 }
 #endif

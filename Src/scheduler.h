@@ -24,7 +24,7 @@ extern uint64_t num_scheduler_ticks;
 typedef struct scheduler {
 	tcb_t *cur_task;
 	task_queue_t ready_lists[MAX_PRIORITIES];
-	task_queue_t blocked_list;
+	task_queue_t blocked_list; // make blocked list into min heap for O(1) search for smallest item
 	task_queue_t delayed_list;
 	uint32_t ready_bitmap;
 } scheduler_t;
@@ -37,10 +37,14 @@ void task_unblock(tcb_t *task);
 
 void task_sleep(uint32_t ticks_asleep);
 
+void scheduler_handle_blocked();
+
 #ifdef DEBUG
 tcb_t* get_cur_task();
 
 scheduler_t *get_scheduler();
+
+uint32_t *get_ticks();
 #endif
 
 void init_scheduler();
