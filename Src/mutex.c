@@ -1,6 +1,14 @@
 
 #include "mutex.h"
 #include "scheduler.h"
+#include "task_queue.h"
+#include <stm32l4xx.h>
+
+void mutex_init(mutex_t *mut)
+{
+	mut->owner_pid = 0;
+	init_task_queue(&(mut->delayed_tasks));
+}
 
 void mutex_aquire(mutex_t *mut)
 {

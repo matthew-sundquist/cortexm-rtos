@@ -18,6 +18,7 @@ typedef struct mutex
 	task_queue_t delayed_tasks;
 } mutex_t;
 
+void mutex_init(mutex_t *mut);
 void mutex_aquire(mutex_t *mut);
 void mutex_release(mutex_t *mut);
 

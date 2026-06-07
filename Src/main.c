@@ -6,6 +6,7 @@
 #include "config.h"
 #include "assert.h"
 #include "string.h"
+#include "mutex.h"
 
 #ifdef UNIT_TESTS
 #include "unit_tests.h"
@@ -38,6 +39,9 @@ tcb_t task_2;
 uint32_t arg_1 = 0;
 uint32_t arg_2 = 0;
 
+mutex_t test_mutex;
+
+
 void init_systick(int hz)
 {
 	SysTick->CTRL &= ~0x01;
@@ -61,7 +65,9 @@ void turn_on_LED(void)
 {
 	while (1)
 	{
+		mutex_aquire(&test_mutex);
 		GPIOA->ODR = (1U << 5);
+		mutex_release(&test_mutex);
 	}
 }
 
@@ -69,8 +75,9 @@ void turn_off_LED(void)
 {
 	while (1)
 	{
+		mutex_aquire(&test_mutex);
 		GPIOA->ODR = (0U << 5);
-		task_sleep(10);
+		mutex_release(&test_mutex);
 	}
 }
 
@@ -108,6 +115,7 @@ int main(void)
 
 	init_scheduler();
 
+	mutex_init(&test_mutex);
 	// Disable FPU (CP10 and CP11 Full Access clear)
 	// This forces the CPU to use standard 8-word hardware stacking
 	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
