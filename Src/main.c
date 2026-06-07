@@ -14,7 +14,7 @@ uint32_t num_errors = 0;
 #endif
 
 //#define UNIT_TESTS
-#define SYSTICK_HZ 1
+#define SYSTICK_HZ 100
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
 int cur_task = 2;
@@ -28,18 +28,27 @@ void delay(volatile uint32_t count) {
 
 __attribute__((aligned(8))) uint32_t task_1_stack[STACK_SIZE];
 __attribute__((aligned(8))) uint32_t task_2_stack[STACK_SIZE];
+__attribute__((aligned(8))) uint32_t idle_stack[STACK_SIZE];
 
 uint32_t *task_1_sp = &task_1_stack[STACK_SIZE];
 uint32_t *task_2_sp = &task_2_stack[STACK_SIZE];
+uint32_t *idle_task_sp = &idle_stack[STACK_SIZE];
 
 tcb_t task_1;
 
 tcb_t task_2;
 
+tcb_t idle_task;
+
 uint32_t arg_1 = 0;
 uint32_t arg_2 = 0;
+uint32_t arg_3 = 0;
 
 mutex_t test_mutex;
+
+uint32_t c1 = 0;
+uint32_t c2 = 0;
+uint32_t shared_c = 0;
 
 
 void init_systick(int hz)
@@ -63,21 +72,36 @@ void SysTick_Handler()
 
 void turn_on_LED(void)
 {
+	scheduler_t *s = get_scheduler();
 	while (1)
 	{
 		mutex_aquire(&test_mutex);
+
 		GPIOA->ODR = (1U << 5);
+
 		mutex_release(&test_mutex);
 	}
 }
 
 void turn_off_LED(void)
 {
+	scheduler_t *s = get_scheduler();
 	while (1)
 	{
 		mutex_aquire(&test_mutex);
+
 		GPIOA->ODR = (0U << 5);
+
 		mutex_release(&test_mutex);
+	}
+	task_sleep(10);
+}
+
+void idle_task_func(void)
+{
+	while (1)
+	{
+		__NOP();
 	}
 }
 
@@ -122,6 +146,7 @@ int main(void)
 
 	int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
 	status += task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
+	status += task_create(&idle_task, idle_task_func, &arg_3, 0, idle_task_sp, "IDLE");
 
 	ASSERT(status == 0);
 

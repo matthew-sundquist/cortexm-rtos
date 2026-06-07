@@ -3,6 +3,8 @@
 #include "scheduler.h"
 #include "task_queue.h"
 #include <stm32l4xx.h>
+#include "tcb.h"
+#include "assert.h"
 
 void mutex_init(mutex_t *mut)
 {
@@ -37,19 +39,19 @@ void mutex_aquire(mutex_t *mut)
 		{
 			// this must add to this mutex's delayed list
 
+			__CLREX();
+
 			tcb_t *cur_task = get_cur_task();
 
 			__disable_irq();
 
-			cur_task->state = DELAYED;
+			task_block(cur_task, BLOCKED);
 
 			task_push(&(mut->delayed_tasks), cur_task);
 
 			__enable_irq();
 
 			scheduler_tick();
-
-			return;
 		}
 	} while (1);
 }
@@ -58,7 +60,7 @@ void mutex_release(mutex_t *mut)
 {
 	if (get_running_pid() != mut->owner_pid)
 	{
-		return; // nothing to be done, we do not have the mutex
+		return;
 	}
 
 	// steps: if task in delayed list,pop a task from the delayed list and add back to ready list
