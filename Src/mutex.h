@@ -22,4 +22,8 @@ void mutex_init(mutex_t *mut);
 void mutex_aquire(mutex_t *mut);
 void mutex_release(mutex_t *mut);
 
+/**
+ * Tests show that implementation is not very fair, consider taking this into account in the future
+ */
+
 #endif /* MUTEX_H_ */

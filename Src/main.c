@@ -14,7 +14,7 @@ uint32_t num_errors = 0;
 #endif
 
 //#define UNIT_TESTS
-#define SYSTICK_HZ 100
+#define SYSTICK_HZ 10
 
 volatile uint8_t os_started = 0; // 0 for not running, 1 for running
 int cur_task = 2;
@@ -92,9 +92,12 @@ void turn_off_LED(void)
 
 		GPIOA->ODR = (0U << 5);
 
+		task_sleep(30);
+
 		mutex_release(&test_mutex);
+
+		task_sleep(10);
 	}
-	task_sleep(10);
 }
 
 void idle_task_func(void)
