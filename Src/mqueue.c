@@ -53,7 +53,7 @@ bool mqueue_pop(mqueue_t *mq, void *data) // pops single element
 		return false;
 	}
 
-	memcpy((uint8_t*)mq->buffer + (mq->head * mq->ele_size), data, mq->ele_size);
+	memcpy(data, (uint8_t*)mq->buffer + (mq->head * mq->ele_size), mq->ele_size);
 
 	mq->head = (mq->head + 1) % mq->ele_size;
 
