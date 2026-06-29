@@ -10,6 +10,7 @@ static void usart_handle_tc(usart_t *usart);
 static inline uint32_t compute_USARTDIV(const uint32_t baudrate, USART_TypeDef *regs);
 static void usart_irq(usart_t *usart);
 static void usart_handle_rxne(usart_t *usart);
+static void usart_handle_ore(usart_t *usart);
 
 static usart_t *usart1;
 static usart_t *usart2;
@@ -154,6 +155,11 @@ static void usart_irq(usart_t *usart)
 	{
 		usart_handle_rxne(usart);
 	}
+
+	if (status & USART_ISR_ORE)
+	{
+		usart_handle_ore(usart);
+	}
 }
 
 static void usart_handle_txe(usart_t *usart)
@@ -178,7 +184,7 @@ static void usart_handle_tc(usart_t *usart)
 
 static void usart_handle_rxne(usart_t *usart)
 {
-	*(usart->rx.buf) = (uint8_t) (usart->regs->RDR & 0x000F);
+	*(usart->rx.buf) = (uint8_t) (usart->regs->RDR & 0xF);
 	usart->rx.buf++;
 	usart->rx.write_idx++;
 
@@ -187,6 +193,15 @@ static void usart_handle_rxne(usart_t *usart)
 		usart->regs->CR1 &= ~USART_CR1_RXNEIE;
 		usart->rx.state = USART_IDLE;
 	}
+}
+
+static void usart_handle_ore(usart_t *usart)
+{
+	// have to read the rdr to get rid of overrun error
+	volatile uint8_t tmp = usart->regs->RDR;
+	(void) tmp;
+
+	// maybe report error here
 }
 
 
