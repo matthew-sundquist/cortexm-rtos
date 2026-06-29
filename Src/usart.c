@@ -5,9 +5,9 @@
 #include "assert.h"
 
 static inline uint32_t get_uart_clk();
+static void usart_handle_txe(usart_t *usart);
 
-
-void usart_init(usart_t *usart, USART_TypeDef *regs, const usart_config_t *config)
+bool usart_init(usart_t *usart, USART_TypeDef *regs, const usart_config_t *config)
 {
 	if (!usart || !regs || !config)
 	{
@@ -83,10 +83,15 @@ bool usart_write_async(usart_t *usart, const void *buf, size_t len)
 	 *				 everytime interrupt goes off, load more data into transmit fifo
 	 *				 when no more data left to load into fifo, auto disable transmit fifo from inside interrupt
 	 */
-	usart->tx.buf = (uint8_t *)buf;
 
-	usart->regs->CR1 |= (1 << 7); // transmit interrupts enable
-	usart->regs->CR1 |= (1 << 6); // transmit complete interrupt enable
+	usart->tx.buf = (uint8_t *)buf;
+	usart->tx.count = len;
+
+	usart->regs->CR1 |= USART_CR1_TXEIE; // transmit interrupts enable
+
+	// put data into TDR reg, and then when TC=1, load more data into the TDR reg
+
+	// can only write the TDR reg when TXE=1 (transmit data register empty)
 
 	// THERE ARE OTHER INTERRUPTS TO BE ENABLED, NEED TO LOOK INTO THIS MORE LATER
 }
@@ -96,3 +101,36 @@ bool usart_read_async(usart_t *usart, void *buf, size_t len)
 {
 
 }
+
+void USART1_IRQHandler()
+{
+
+}
+
+static void usart_irq(usart_t *usart)
+{
+	ASSERT(usart != NULL);
+
+	// grab read of the status reg
+	uint32_t status = usart->regs->ISR;
+
+	if (status & USART_ISR_TXE)
+	{
+		usart_handle_txe(usart);
+	}
+}
+
+static void usart_handle_txe(usart_t *usart)
+{
+	if (usart->tx.count > 0)
+	{
+		usart->regs->TDR = *(usart->tx.buf)++;
+		usart->tx.count--;
+	}
+	else
+	{
+		usart->regs->CR1 &= ~USART_CR1_TXEIE; // disable transmit interrupts
+		usart->regs->CR1 |= USART_CR1_TCIE; // enable transmit interrupt
+	}
+}
+

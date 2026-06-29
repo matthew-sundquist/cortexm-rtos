@@ -42,8 +42,7 @@ typedef enum {
 typedef struct
 {
 	uint8_t *buf;
-	size_t len;
-	size_t pos;
+	size_t count;
 
 	usart_state_t state;
 
