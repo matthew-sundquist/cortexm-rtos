@@ -15,9 +15,9 @@
 // DO NOT RESET TE BIT WHILE TRANSMITTING
 
 typedef enum {
-	UART_WORD_LEN_8 = 0,
-	UART_WORD_LEN_9,
-	UART_WORD_LEN_7
+	USART_WORD_LEN_8 = 0,
+	USART_WORD_LEN_9,
+	USART_WORD_LEN_7
 } usart_word_len_t;
 
 typedef enum {
@@ -44,6 +44,7 @@ typedef struct
 	uint8_t *buf;
 	size_t count;
 	uint8_t write_idx;
+	uint32_t num_errors;
 
 	usart_state_t state;
 
@@ -57,13 +58,14 @@ typedef struct usart_config
 	usart_parity_bit_t parity_bit;
 } usart_config_t;
 
+
 // uart behavior: data shifted out by the least significant bit
 
 // default word length of 8 bits
 typedef struct usart {
 	USART_TypeDef *regs; // contains all registers needed
 
-	usart_config_t config;
+	usart_config_t *config;
 
 	usart_channel_t rx;
 	usart_channel_t tx;

@@ -11,6 +11,7 @@ static inline uint32_t compute_USARTDIV(const uint32_t baudrate, USART_TypeDef *
 static void usart_irq(usart_t *usart);
 static void usart_handle_rxne(usart_t *usart);
 static void usart_handle_ore(usart_t *usart);
+static void usart_handle_idle(usart_t *usart);
 
 static usart_t *usart1;
 static usart_t *usart2;
@@ -23,6 +24,11 @@ bool usart_init(usart_t *usart, USART_TypeDef *regs, const usart_config_t *confi
 	{
 		return false;
 	}
+
+	RCC->APB2ENR |= RCC_APB2ENR_USART1EN; // need to change to not be hardcoded
+
+	usart->regs = regs;
+	usart->config = config;
 
 	regs->CR1 &= ~((1 << 0) | (1 << 12) | (1 << 28));
 	regs->CR1 |= ((config->word_len & 0b01) << 12) | ((config->word_len & 0b10) << 28);
@@ -54,6 +60,11 @@ bool usart_init(usart_t *usart, USART_TypeDef *regs, const usart_config_t *confi
 	regs->CR1 |= (1 << 3) | (1 << 2);
 
 	regs->CR1 |= (1 << 0); // USART enable
+
+	usart1 = usart;
+
+	usart->rx.num_errors = 0;
+	usart->tx.num_errors = 0;
 
 	return true;
 }
@@ -101,6 +112,7 @@ bool usart_write_async(usart_t *usart, const void *buf, size_t len)
 	usart->tx.state = USART_BUSY;
 
 	usart->regs->CR1 |= USART_CR1_TXEIE; // transmit interrupts enable
+	usart->regs->CR1 &= ~USART_CR1_TCIE; // disable transmit complete interrupt
 
 	// put data into TDR reg, and then when TC=1, load more data into the TDR reg
 
@@ -141,6 +153,11 @@ static void usart_irq(usart_t *usart)
 	// grab read of the status reg
 	uint32_t status = usart->regs->ISR;
 
+	if (status & USART_ISR_RXNE)
+	{
+		usart_handle_rxne(usart);
+	}
+
 	if (status & USART_ISR_TXE)
 	{
 		usart_handle_txe(usart);
@@ -151,41 +168,38 @@ static void usart_irq(usart_t *usart)
 		usart_handle_tc(usart);
 	}
 
-	if (status & USART_ISR_RXNE)
-	{
-		usart_handle_rxne(usart);
-	}
-
 	if (status & USART_ISR_ORE)
 	{
 		usart_handle_ore(usart);
+	}
+
+	if (status & USART_ISR_IDLE)
+	{
+		usart_handle_idle(usart);
 	}
 }
 
 static void usart_handle_txe(usart_t *usart)
 {
-	if (usart->tx.count > 0)
-	{
-		usart->regs->TDR = *(usart->tx.buf)++;
-		usart->tx.count--;
-	}
-	else
+	usart->regs->TDR = usart->tx.buf[usart->tx.write_idx++];
+
+	if (usart->tx.write_idx >= usart->tx.count)
 	{
 		usart->regs->CR1 &= ~USART_CR1_TXEIE; // disable transmit interrupts
-		usart->regs->CR1 |= USART_CR1_TCIE; // enable transmit interrupt
+		usart->regs->CR1 |= USART_CR1_TCIE; // enable transmit complete interrupt
 	}
 }
 
 static void usart_handle_tc(usart_t *usart)
 {
 	usart->regs->CR1 &= ~USART_CR1_TCIE;
+	usart->regs->ICR |= USART_ICR_TCCF;
 	usart->tx.state = USART_IDLE;
 }
 
 static void usart_handle_rxne(usart_t *usart)
 {
-	*(usart->rx.buf) = (uint8_t) (usart->regs->RDR & 0xF);
-	usart->rx.buf++;
+	usart->rx.buf[usart->rx.write_idx] = (uint8_t) (usart->regs->RDR & 0xFF);
 	usart->rx.write_idx++;
 
 	if (usart->rx.write_idx >= usart->rx.count)
@@ -198,11 +212,19 @@ static void usart_handle_rxne(usart_t *usart)
 static void usart_handle_ore(usart_t *usart)
 {
 	// have to read the rdr to get rid of overrun error
-	volatile uint8_t tmp = usart->regs->RDR;
+	volatile uint8_t tmp = usart->regs->RDR & 0xF;
 	(void) tmp;
+	usart->regs->ICR = USART_ICR_ORECF;
 
+	usart->rx.num_errors++;
 	// maybe report error here
 }
 
+static void usart_handle_idle(usart_t *usart)
+{
+	(void)usart->regs->ISR;
+	(void)usart->regs->RDR;
+	usart->regs->ICR = USART_ICR_IDLECF;
+}
 
 

@@ -7,6 +7,7 @@
 #include "assert.h"
 #include "string.h"
 #include "mutex.h"
+#include "usart.h"
 
 #ifdef UNIT_TESTS
 #include "unit_tests.h"
@@ -140,25 +141,65 @@ int main(void)
 int main(void)
 {
 
-	init_scheduler();
+	//init_scheduler();
 
-	mutex_init(&test_mutex);
+	//mutex_init(&test_mutex);
 	// Disable FPU (CP10 and CP11 Full Access clear)
 	// This forces the CPU to use standard 8-word hardware stacking
 	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
 
-	int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
-	status += task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
-	status += task_create(&idle_task, idle_task_func, &arg_3, 0, idle_task_sp, "IDLE");
+//	int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
+//	status += task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
+//	status += task_create(&idle_task, idle_task_func, &arg_3, 0, idle_task_sp, "IDLE");
 
-	ASSERT(status == 0);
+//	ASSERT(status == 0);
 
-	gpio_setup();
+	//gpio_setup();
 
-    init_systick(SYSTICK_HZ); // enables the scheduler
+//    init_systick(SYSTICK_HZ); // enables the scheduler
 
-    while (1)
-    {
-    }
+	USART_TypeDef *usart1_regs = USART1;
+	usart_t usart1_inst;
+	usart_config_t usart1_config = {
+			.baudrate = 9600,
+			.word_len = USART_WORD_LEN_8,
+			.stop_bits = UART_STOP_BITS_1,
+			.parity_bit = UART_PARITY_NONE
+	};
+
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+	(void)RCC->AHB2ENR;
+
+	// PA9, PA10 -> AF mode
+	GPIOA->MODER &= ~((3 << 18) | (3 << 20));
+	GPIOA->MODER |=  ((2 << 18) | (2 << 20));
+
+	// AF7 = USART1
+	GPIOA->AFR[1] &= ~((0xF << 4) | (0xF << 8));
+	GPIOA->AFR[1] |=  ((7 << 4) | (7 << 8));
+
+	NVIC_EnableIRQ(USART1_IRQn);
+
+	usart_init(&usart1_inst, usart1_regs, &usart1_config);
+
+	char buf[5] = {'s', 'i', 'g', 'm', 'a'};
+	char recv_buf[5] = {0, 0, 0, 0, 0};
+	int entry = 1;
+	while (1)
+	{
+		if (entry == 1)
+		{
+			usart_read_async(&usart1_inst, recv_buf, sizeof(recv_buf));
+
+			usart_write_async(&usart1_inst, buf, sizeof(buf));
+
+
+			entry = 0;
+		}
+		if (recv_buf[0] == 's' && recv_buf[4] == 'a')
+		{
+			__BKPT(0);
+		}
+	}
 }
 #endif
