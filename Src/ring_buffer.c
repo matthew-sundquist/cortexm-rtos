@@ -1,6 +1,6 @@
 
 #include "ring_buffer.h"
-
+#include <string.h>
 
 static inline size_t get_total_elements(const uint32_t head, const uint32_t tail, const size_t size);
 
@@ -17,24 +17,27 @@ bool ring_buffer_init(ring_buffer_t* rb, uint8_t *buf, size_t size)
 	rb->size = size;
 	rb->head = 0;
 	rb->tail = 0;
+
+	return true;
 }
 
 bool ring_buffer_write_byte(ring_buffer_t* rb, const uint8_t data)
 {
+	const static uint8_t size = 1;
 	if (!rb)
 	{
 		return false;
 	}
 
 
-	if (rb->head + 1 == rb->tail)
+	if (rb->head + size == rb->tail)
 	{
 		// full case
 		return false;
 	}
 
 	rb->buf[rb->head] = data;
-	rb->head = (rb->head + 1) % rb->size;
+	rb->head = (rb->head + size) % rb->size;
 	return true;
 }
 
