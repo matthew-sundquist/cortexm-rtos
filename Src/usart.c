@@ -138,12 +138,7 @@ bool usart_read_async(usart_t *usart, void *buf, size_t len)
 		return false;
 	}
 
-	if (ring_buffer_pop(&usart->rx.rb, (uint8_t *) buf, len))
-	{
-		return false;
-	}
-
-	return true;
+	return ring_buffer_pop(&usart->rx.rb, (uint8_t *) buf, len);
 }
 
 bool usart_enable_rx_int(usart_t *usart)

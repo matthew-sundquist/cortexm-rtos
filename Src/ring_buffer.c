@@ -27,22 +27,7 @@ bool ring_buffer_init(ring_buffer_t* rb, uint8_t *buf, size_t size)
 
 bool ring_buffer_push_byte(ring_buffer_t* rb, const uint8_t data)
 {
-	const static uint8_t size = 1;
-	if (!rb)
-	{
-		return false;
-	}
-
-
-	if (is_full(rb->head, rb->tail))
-	{
-		// full case
-		return false;
-	}
-
-	rb->buf[rb->head] = data;
-	rb->head = (rb->head + size) % rb->size;
-	return true;
+	return ring_buffer_push(rb, &data, 1);
 }
 
 bool ring_buffer_push(ring_buffer_t *rb, const uint8_t *data, size_t size)
@@ -74,22 +59,7 @@ bool ring_buffer_push(ring_buffer_t *rb, const uint8_t *data, size_t size)
 
 bool ring_buffer_pop_byte(ring_buffer_t* rb, uint8_t* data)
 {
-	if (!rb || !data)
-	{
-		return false;
-	}
-
-	if (is_empty(rb->head, rb->tail))
-	{
-		return false;
-	}
-
-	*data = rb->tail;
-
-	rb->tail++;
-
-	return true;
-
+	return ring_buffer_pop(rb, data, 1);
 }
 
 bool ring_buffer_pop(ring_buffer_t* rb, uint8_t *data, size_t size)

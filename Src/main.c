@@ -194,21 +194,23 @@ int main(void)
 
 	usart_init(&usart1_inst, usart1_regs, &usart1_config);
 
+	usart_enable_rx_int(&usart1_inst);
+
 	int entry = 1;
 	while (1)
 	{
 		uint8_t recv_buf[5];
-		uint8_t buf[5] = {1, 2, 3, 4, 5};
+		uint8_t buf[5] = {10, 20, 30, 40, 50};
 		if (entry == 1)
 		{
-			usart_read_async(&usart1_inst, recv_buf, sizeof(recv_buf));
 
 			usart_write_async(&usart1_inst, buf, sizeof(buf));
 
 
 			entry = 0;
 		}
-		if (recv_buf[0] == 's' && recv_buf[4] == 'a')
+
+		if (usart_read_async(&usart1_inst, recv_buf, sizeof(recv_buf)))
 		{
 			__BKPT(0);
 		}
