@@ -1,9 +1,9 @@
 
-
 #include <stdlib.h>
 #include "usart.h"
 #include "assert.h"
 #include "semaphore.h"
+#include "scheduler.h"
 
 static inline uint32_t get_uart_clk();
 static void usart_handle_txe(usart_t *usart);

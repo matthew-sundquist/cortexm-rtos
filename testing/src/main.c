@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "scheduler.h"
 #include "task.h"
-#include "config.h"
 #include "assert.h"
 #include "string.h"
 #include "mutex.h"
@@ -73,7 +72,6 @@ void SysTick_Handler()
 
 void turn_on_LED(void)
 {
-	scheduler_t *s = get_scheduler();
 	while (1)
 	{
 		mutex_aquire(&test_mutex);
@@ -86,7 +84,6 @@ void turn_on_LED(void)
 
 void turn_off_LED(void)
 {
-	scheduler_t *s = get_scheduler();
 	while (1)
 	{
 		mutex_aquire(&test_mutex);

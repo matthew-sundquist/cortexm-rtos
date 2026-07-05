@@ -1,12 +1,11 @@
-#include "../src/config.h"
 
 #ifdef UNIT_TESTS
 #include <stdlib.h>
 #include <stm32l4xx.h>
 #include "unit_tests.h"
-#include "../src/tcb.h"
-#include "../src/task_queue.h"
-#include "../src/assert.h"
+#include "tcb.h"
+#include "task_queue.h"
+#include "assert.h"
 
 
 void test_queue_init()

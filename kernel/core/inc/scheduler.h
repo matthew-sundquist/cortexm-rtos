@@ -46,9 +46,9 @@ tcb_t* get_cur_task();
 
 scheduler_t *get_scheduler();
 
-uint32_t get_ticks();
 #endif
 
+uint32_t get_ticks();
 void init_scheduler();
 void scheduler_tick();
 void handle_blocked();

@@ -1,6 +1,6 @@
 
 #include "ring_buffer.h"
-#include <string.h>
+#include "mem.h"
 
 static inline size_t get_total_elements(const uint32_t head, const uint32_t tail, const size_t size);
 

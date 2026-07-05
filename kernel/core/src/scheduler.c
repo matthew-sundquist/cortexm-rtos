@@ -154,11 +154,12 @@ scheduler_t *get_scheduler()
 	return &sch_inst;
 }
 
+#endif
+
 uint32_t get_ticks()
 {
 	return sch_ticks;
 }
-#endif
 
 uint32_t get_running_pid()
 {
