@@ -11,4 +11,6 @@ Release/
 *.xml
 *.cproject
 *.xml
-
+run_gdb.sh
+.*
+flash_board.sh
