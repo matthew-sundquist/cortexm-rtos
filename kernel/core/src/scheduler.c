@@ -10,6 +10,9 @@
 #include "assert.h"
 #include <stdio.h>
 
+#define SHPR3 (*((volatile uint32_t *)0xE000ED20))
+#define LOWEST_PRI_PENDSV (~(0xF << 16))
+
 static scheduler_t sch_inst;
 
 tcb_t* cur_process = NULL;
@@ -18,6 +21,8 @@ uint32_t sch_ticks = 0;
 
 void init_scheduler()
 {
+  
+  SHPR3 &= LOWEST_PRI_PENDSV;
 
 	sch_inst.ready_bitmap = 0;
 	sch_inst.cur_task = NULL;
