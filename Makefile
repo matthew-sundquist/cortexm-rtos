@@ -32,8 +32,8 @@ release: CPPFLAGS += -DDEBUG=0
 release: CFLAGS += -O3 
 
 debug: CPPFLAGS += -DDEBUG=1
-debug: CFLAGS += -Og
-debug: ASFLAGS += -Og
+debug: CFLAGS += -Og -g 
+debug: ASFLAGS += -Og -g 
 debug: debug.elf
 
 debug.elf: $(OBJS)
