@@ -6,7 +6,6 @@
 #include "assert.h"
 
 #define MAX_CONNECTIONS 3
-#define MAX_PAYLOAD_SIZE_BYTES 1000
 
 static uint32_t cur_connections = 0xFF; // all connections available
 
@@ -14,7 +13,20 @@ static uint8_t buffers[MAX_CONNECTIONS][MAX_PAYLOAD_SIZE_BYTES];
 
 static inline bool get_available_buf(uint8_t *buf);
 
-netbuf_t netbuf_alloc()
+typedef struct netbuf_pool {
+    netbuf_t *free_list;
+    mutex_t lock;
+} netbuf_pool_t;
+
+static inline void netbuf_pool_push(netbuf_t *nbuf);
+
+static inline netbuf_t *netbuf_pool_pop();
+
+static netbuf_t nbuf_pool[MAX_CONNECTIONS];
+
+static netbuf_pool_t netbuf_manager;
+
+static netbuf_t *netbuf_alloc(netbuf_pool_t *pool)
 {
     uint8_t *buf;
     // if cur connections is all 1, then the connections are available
@@ -46,28 +58,16 @@ bool netbuf_free(netbuf_t *nbuf)
 
 
 // does not check if buf is out of range
-static inline bool get_available_buf(uint8_t *buf)
+static netbuf_t *get_available_buf()
 {
-    uint32_t all_cons = cur_connections & MAX_CONNECTIONS;
-
-    if (!all_cons || !buf)
-    {
-        return false;
-    }
+    netbuf_node_t n = netbuf_manager.free_list; // get head of free list
     
-    uint32_t shift_amount = 0;
-
-    while (all_cons != 1)
+    if (!n)
     {
-        shift_amount++;
-        all_cons >>= 1;
+        return NULL;
     }
 
-    buf = buffers[shift_amount];
-
-    cur_connections &= ~(1 << shift_amount);
-
-    return true;
+    
 }
 
 bool netbuf_reset(netbuf_t *nbuf)
@@ -125,4 +125,9 @@ uint8_t *netbuf_data(netbuf_t *nbuf)
     }
 
     return nbuf->buf;
+}
+
+static inline void netbuf_pool_push(netbuf_t *nbuf)
+{
+
 }
