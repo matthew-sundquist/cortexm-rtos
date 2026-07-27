@@ -26,20 +26,9 @@ static netbuf_t nbuf_pool[MAX_CONNECTIONS];
 
 static netbuf_pool_t netbuf_manager;
 
-static netbuf_t *netbuf_alloc(netbuf_pool_t *pool)
+static netbuf_t *netbuf_alloc()
 {
-    uint8_t *buf;
-    // if cur connections is all 1, then the connections are available
-    if (!get_available_buf(buf))
-    {
-        return NULL;
-    }
-
-    netbuf_t nbuf;
-
-    nbuf.buf = buf;
-
-    return nbuf;
+    return netbuf_pool_pop();
 }
 
 bool netbuf_free(netbuf_t *nbuf)
@@ -49,26 +38,11 @@ bool netbuf_free(netbuf_t *nbuf)
         return false;
     }
 
-    uint32_t buf_num = (nbuf->buf - buffers) / MAX_PAYLOAD_SIZE_BYTES;
+    netbuf_pool_push(nbuf);
 
-    cur_connections |= buf_num;
-
-    return true;
+    return true
 }
 
-
-// does not check if buf is out of range
-static netbuf_t *get_available_buf()
-{
-    netbuf_node_t n = netbuf_manager.free_list; // get head of free list
-    
-    if (!n)
-    {
-        return NULL;
-    }
-
-    
-}
 
 bool netbuf_reset(netbuf_t *nbuf)
 {
@@ -129,5 +103,22 @@ uint8_t *netbuf_data(netbuf_t *nbuf)
 
 static inline void netbuf_pool_push(netbuf_t *nbuf)
 {
+    ASSERT(nbuf != NULL);
 
+    mutex_aquire(netbuf_manager.lock);
+    nbuf->next = netbuf_manager.free_list;
+    netbuf_manager.free_list = nbuf;
+    mutex_release(netbuf_manager.lock);
+}
+
+static inline netbuf_t *netbuf_pool_pop()
+{
+    netbuf_t *head = netbuf_manager.free_list;
+
+    if (head)
+    {
+        netbuf_manager.free_list = netbuf_manager.free_list->next;
+    }
+
+    return head;
 }
