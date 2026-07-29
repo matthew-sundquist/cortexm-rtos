@@ -69,5 +69,7 @@ bool ts_queue_pop(ts_queue_t *q, queue_link_t *ql)
 
     ql->next = NULL;
 
+    mutex_release(&q->mut);
+
     return true;
 }
