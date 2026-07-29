@@ -22,7 +22,7 @@ typedef struct ts_queue {
 // with any fields they need, rather than adding a length field to the node struct
 
 bool ts_queue_init(ts_queue_t *q);
-bool ts_queue_push(ts_queue_t *q, void *data);
-bool ts_queue_pop(ts_queue_t *q, void *data);
+bool ts_queue_push(ts_queue_t *q, queue_link_t *ql);
+bool ts_queue_pop(ts_queue_t *q, queue_link_t *ql);
 
 #endif
