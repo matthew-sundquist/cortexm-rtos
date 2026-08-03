@@ -2,13 +2,13 @@
 #ifndef NETQUEUE_H
 #define NETQUEUE_H
 
-#include "ts_queue.h"
 #include "netbuf.h"
 #include "semaphore.h"
+#include "ts_queue.h"
 
 typedef struct netqueue {
-    ts_queue_t queue;
-    semaphore_t sem;
+  ts_queue_t queue;
+  semaphore_t sem;
 } netqueue_t;
 
 bool netqueue_init(netqueue_t *nq);

@@ -14,3 +14,4 @@ Release/
 run_gdb.sh
 .*
 flash_board.sh
+*compile_commands*
