@@ -38,9 +38,9 @@ bool ts_queue_push(ts_queue_t *q, queue_link_t *ql) {
 }
 
 // pop from head
-bool ts_queue_pop(ts_queue_t *q, queue_link_t *ql) {
-  if (!q || !ql) {
-    return false;
+queue_link_t *ts_queue_pop(ts_queue_t *q) {
+  if (!q) {
+    return NULL;
   }
 
   mutex_aquire(&q->mut);
@@ -50,7 +50,7 @@ bool ts_queue_pop(ts_queue_t *q, queue_link_t *ql) {
     return false;
   }
 
-  ql = q->head;
+  queue_link_t *ql = q->head;
 
   if (q->head == q->tail) {
     q->tail = NULL;
@@ -62,5 +62,5 @@ bool ts_queue_pop(ts_queue_t *q, queue_link_t *ql) {
 
   mutex_release(&q->mut);
 
-  return true;
+  return ql;
 }

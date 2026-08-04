@@ -37,24 +37,22 @@ bool netqueue_push(netqueue_t *nq, netbuf_t *nb)
     return true;
 }
 
-bool netqueue_pop(netqueue_t *nq, netbuf_t *nb)
+netbuf_t *netqueue_pop(netqueue_t *nq)
 {
-    if (!nq || !nb)
+    if (!nq)
     {
-        return false;
+        return NULL;
     }
 
     sem_aquire(&nq->sem);
 
-    queue_link_t *link;
-    if (!ts_queue_pop(&nq->queue, link))
+    queue_link_t *link = ts_queue_pop(&nq->queue);
+    if (!link)
     {
-        return false;
+        return NULL;
     }
 
-    nb = container_of(link, netbuf_t, link);
-
-    return true;
+    return (netbuf_t *) container_of(link, netbuf_t, link);
 }
 
 

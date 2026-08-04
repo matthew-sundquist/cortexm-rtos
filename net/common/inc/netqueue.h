@@ -13,6 +13,6 @@ typedef struct netqueue {
 
 bool netqueue_init(netqueue_t *nq);
 bool netqueue_push(netqueue_t *nq, netbuf_t *nb);
-bool netqueue_pop(netqueue_t *nq, netbuf_t *nb);
+netbuf_t *netqueue_pop(netqueue_t *nq);
 
 #endif

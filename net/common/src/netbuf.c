@@ -7,9 +7,7 @@
 #include "netbuf.h"
 #include "netqueue.h"
 
-#define MAX_CONNECTIONS 3
-
-static uint32_t cur_connections = 0xFF; // all connections available
+#define NETBUF_POOL_SIZE 3
 
 static netqueue_t netbuf_pool;
 
@@ -17,12 +15,21 @@ static inline void netbuf_pool_push(netbuf_t *nbuf);
 
 static inline netbuf_t *netbuf_pool_pop();
 
-static netbuf_t nbuf_pool[MAX_CONNECTIONS];
+static void netbuf_reset(netbuf_t *nbuf);
 
-static netbuf_t *netbuf_alloc() { return netbuf_pool_pop(); }
+static netbuf_t nbuf_pool[NETBUF_POOL_SIZE];
+
+netbuf_t *netbuf_alloc() { return netbuf_pool_pop(); }
+
+static void init_pool();
+
+void netbufs_init()
+{
+    init_pool();
+}
 
 bool netbuf_free(netbuf_t *nbuf) {
-  if (!nbuf || !nbuf->buf) {
+  if (!nbuf) {
     return false;
   }
 
@@ -31,21 +38,18 @@ bool netbuf_free(netbuf_t *nbuf) {
   return true;
 }
 
-bool netbuf_reset(netbuf_t *nbuf) {
-  if (!nbuf || !nbuf->buf) {
-    return false;
-  }
+static void netbuf_reset(netbuf_t *nbuf) {
+
+  ASSERT(nbuf != NULL);
 
   nbuf->cap = MAX_PAYLOAD_SIZE_BYTES;
 
   nbuf->head = nbuf->buf + MAX_PAYLOAD_SIZE_BYTES;
 
   nbuf->len = 0;
-
-  return true;
 }
 
-bool netbuf_push(netbuf_t *nbuf, uint8_t *data, uint32_t len) {
+bool netbuf_push(netbuf_t *nbuf, const uint8_t *data, uint32_t len) {
   if (!nbuf || !data || len <= 0) {
     return false;
   }
@@ -83,8 +87,18 @@ static inline void netbuf_pool_push(netbuf_t *nbuf) {
   netqueue_push(&netbuf_pool, nbuf);
 }
 
-static inline netbuf_t *netbuf_pool_pop() {
-  netbuf_t *nb;
-  netqueue_pop(&netbuf_pool, nb);
-  return nb;
+static inline netbuf_t *netbuf_pool_pop() 
+{
+  return netqueue_pop(&netbuf_pool);
+}
+
+static void init_pool()
+{
+   netqueue_init(&netbuf_pool);
+
+   for (int i = 0; i < NETBUF_POOL_SIZE; i++)
+   {
+       netbuf_reset(&nbuf_pool[i]);
+       netqueue_push(&netbuf_pool, &nbuf_pool[i]);
+   }
 }

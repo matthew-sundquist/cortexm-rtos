@@ -70,11 +70,15 @@ void SysTick_Handler()
 	scheduler_tick();
 }
 
+void usart_recv_task()
+{
+	return;
+}
+
 void turn_on_LED(void)
 {
 	while (1)
-	{
-		mutex_aquire(&test_mutex);
+	{		mutex_aquire(&test_mutex);
 
 		GPIOA->ODR = (1U << 5);
 

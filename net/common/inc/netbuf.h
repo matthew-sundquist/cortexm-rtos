@@ -18,11 +18,12 @@ typedef struct netbuf {
 } netbuf_t;
 
 bool netbuf_free(netbuf_t *nbuf);
-bool netbuf_push(netbuf_t *nbuf, uint8_t *data, uint32_t len);
+netbuf_t *netbuf_alloc();
+bool netbuf_push(netbuf_t *nbuf, const uint8_t *data, uint32_t len);
 
 uint32_t netbuf_len(netbuf_t *nbuf);
 uint8_t *netbuf_data(netbuf_t *nbuf);
 
-bool netbuf_reset(netbuf_t *nbuf);
+void netbufs_init();
 
 #endif
