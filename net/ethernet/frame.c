@@ -3,29 +3,22 @@
 
 #include "ethernet.h"
 
-#define SFD ((uint8_t) 0b10101011)
-
-#define SFD_OFFSET_BYTES 0
-#define SFD_SIZE_BYTES 1
-
-#define DST_MAC_OFFSET_BYTES (SFD_OFFSET + SFD_SIZE_BYTES)
+#define DST_MAC_OFFSET_BYTES 0
 #define DST_MAC_SIZE_BYTES 6
 
 #define SRC_MAC_OFFSET_BYTES (DST_MAC_OFFSET_BYTES + DST_MAC_SIZE_BYTES)
 #define SRC_MAC_SIZE_BYTES 6
 
-#define LENGTH_OFFSET_BYTES (SRC_MAC_OFFSET_BYTES + SRC_MAC_SIZE_BYTES)
-#define LENGTH_SIZE_BYTES 2
+#define ETHERTYPE_OFFSET_BYTES (SRC_MAC_OFFSET_BYTES + SRC_MAC_SIZE_BYTES)
+#define ETHERTYPE_SIZE_BYTES 2
 
-#define ETH_HEADER_LEN (SFD_SIZE_BYTES + DST_MAC_SIZE_BYTES + SRC_MAC_SIZE_BYTES + LENGTH_SIZE_BYTES)
-
-static inline void add_sfd(uint8_t *hdr, const uint8_t sfd);
+#define ETH_HEADER_LEN (DST_MAC_SIZE_BYTES + SRC_MAC_SIZE_BYTES + ETHERTYPE_SIZE_BYTES)
 
 static inline void add_dst(uint8_t *hdr, const uint8_t *dst);
 
 static inline void add_src(uint8_t *hdr, const uint8_t *src);
 
-static inline void add_len(uint8_t *hdr, const uint16_t len);
+static inline void add_ethertype(uint8_t *hdr, const uint16_t len);
 
 bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb)
 {
@@ -38,17 +31,11 @@ bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb)
     
     uint8_t e_hdr[ETH_HEADER_LEN];
 
-    add_sfd(e_hdr, SFD);
     add_dst(e_hdr, eth_header->dst_mac);
     add_src(e_hdr, eth_header->src_mac);
-    add_len(e_hdr, (uint16_t) nb->len);
+    add_ethertype(e_hdr, (uint16_t) eth_header->ethertype);
 
     return netbuf_push(nb, e_hdr, ETH_HEADER_LEN);
-}
-
-static inline void add_sfd(uint8_t *hdr, const uint8_t sfd)
-{
-    hdr[SFD_OFFSET_BYTES] = sfd;
 }
 
 static inline void add_dst(uint8_t *hdr, const uint8_t *dst)
@@ -61,8 +48,8 @@ static inline void add_src(uint8_t *hdr, const uint8_t *src)
     memcpy(hdr + SRC_MAC_OFFSET_BYTES, src, SRC_MAC_SIZE_BYTES);
 }
 
-static inline void add_len(uint8_t *hdr, const uint16_t len)
+static inline void add_ethertype(uint8_t *hdr, const uint16_t len)
 {
-    memcpy(hdr + LENGTH_OFFSET_BYTES, len, LENGTH_SIZE_BYTES);
+    memcpy(hdr + ETHERTYPE_OFFSET_BYTES, len, ETHERTYPE_SIZE_BYTES);
 }
 
