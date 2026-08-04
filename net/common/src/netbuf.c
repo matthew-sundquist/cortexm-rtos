@@ -62,6 +62,8 @@ bool netbuf_push(netbuf_t *nbuf, const uint8_t *data, uint32_t len) {
 
   nbuf->head -= len;
 
+  nbuf->len += len;
+
   return true;
 }
 
