@@ -1,4 +1,5 @@
 
+#include <arpa/inet.h>
 #include <string.h>
 
 #include "frame.h"
@@ -21,6 +22,12 @@ static inline void add_src(uint8_t *hdr, const uint8_t *src);
 
 static inline void add_ethertype(uint8_t *hdr, const ethertype_t type);
 
+static inline void parse_dst(const uint8_t *hdr_bytes, ethernet_header_t *hdr);
+
+static inline void parse_src(const uint8_t *hdr_bytes, ethernet_header_t *hdr);
+
+static inline void parse_ethertype(uint8_t *hdr_bytes, ethernet_header_t *hdr);
+
 bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb)
 {
     ASSERT(nb != NULL);
@@ -34,7 +41,7 @@ bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb)
     add_src(e_hdr, eth_header->src_mac);
     add_ethertype(e_hdr, (uint16_t) eth_header->ethertype);
 
-    return netbuf_push(nb, e_hdr, ETH_HEADER_LEN);
+    return netbuf_push_front(nb, e_hdr, ETH_HEADER_LEN);
 }
 
 bool ethernet_parse_header(netbuf_t *nb, ethernet_header_t *eth_header);
@@ -42,10 +49,21 @@ bool ethernet_parse_header(netbuf_t *nb, ethernet_header_t *eth_header);
     ASSERT(nb != NULL);
     ASSERT(eth_header != NULL);
 
+    uint8_t eth_header_bytes[ETH_HEADER_LEN];
 
+    if (!netbuf_pop_front(nb, eth_header_bytes, ETH_HEADER_LEN))
+    {
+        return false;
+    }
+
+    parse_dst(eth_header_bytes, eth_header);
+    parse_src(eth_header_bytes, eth_header);
+    parse_ethertype(eth_header_bytes, eth_header);
+
+    return true;
 }
 
-static inline void add_dst(uint8_t *hdr, const uint8_t *dst)
+static inline void add_dst(uint16_t *hdr, const uint8_t *dst)
 {
     memcpy(hdr + DST_MAC_OFFSET_BYTES, dst, DST_MAC_SIZE_BYTES);
 }
@@ -57,6 +75,22 @@ static inline void add_src(uint8_t *hdr, const uint8_t *src)
 
 static inline void add_ethertype(uint8_t *hdr, const ethertype_t type)
 {
-    memcpy(hdr + ETHERTYPE_OFFSET_BYTES, (uint16_t) type, ETHERTYPE_SIZE_BYTES);
+    const uint16_t net_endian_type = htons((uint16_t) type);
+    
+    memcpy(hdr + ETHERTYPE_OFFSET_BYTES, &net_endian_type, ETHERTYPE_SIZE_BYTES);
 }
 
+static inline void parse_dst(const uint8_t *hdr_bytes, ethernet_header_t *hdr)
+{
+    memcpy(hdr->dst_mac, hdr_bytes + DST_MAC_OFFSET_BYTES, DST_MAC_SIZE_BYTES);
+}
+
+static inline void parse_src(const uint8_t *hdr_bytes, ethernet_header_t *hdr)
+{
+    memcpy(hdr->src_mac, hdr_bytes + SRC_MAC_OFFSET_BYTES, SRC_MAC_SIZE_BYTES);
+}
+
+static inline void parse_ethertype(uint8_t *hdr_bytes, ethernet_header_t *hdr)
+{
+    hdr->ethertype = ntohs(*(uint16_t *)(hdr_bytes + ETHERTYPE_OFFSET_BYTES));
+}
