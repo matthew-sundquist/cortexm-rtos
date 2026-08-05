@@ -34,6 +34,8 @@ typedef struct arp_entry
 
 // arp table implemented as opaque object
 
+void arp_init();
+
 bool arp_lookup(ipv4_addr_t ip, mac_addr_t *mac);
 
 
