@@ -44,7 +44,7 @@ bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb)
     return netbuf_push_front(nb, e_hdr, ETH_HEADER_LEN);
 }
 
-bool ethernet_parse_header(netbuf_t *nb, ethernet_header_t *eth_header);
+bool ethernet_parse_header(netbuf_t *nb, ethernet_header_t *eth_header)
 {
     ASSERT(nb != NULL);
     ASSERT(eth_header != NULL);
@@ -63,7 +63,7 @@ bool ethernet_parse_header(netbuf_t *nb, ethernet_header_t *eth_header);
     return true;
 }
 
-static inline void add_dst(uint16_t *hdr, const uint8_t *dst)
+static inline void add_dst(uint8_t *hdr, const uint8_t *dst)
 {
     memcpy(hdr + DST_MAC_OFFSET_BYTES, dst, DST_MAC_SIZE_BYTES);
 }

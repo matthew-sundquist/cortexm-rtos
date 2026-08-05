@@ -176,5 +176,7 @@ static bool netbuf_insert(netbuf_t *nbuf, const uint8_t *data, size_t len, netbu
     }
 
     nbuf->len += len;
+
+    return true;
 }
 
