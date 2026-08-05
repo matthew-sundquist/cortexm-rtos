@@ -17,8 +17,4 @@ typedef struct ethernet_header {
 
 // funcs defined in frame.c
 
-bool ethernet_add_header(const ethernet_header_t *eth_header, netbuf_t *nb);
-
-bool ethernet_parse_header(netbuf_t *nbuf, ethernet_header_t *eth_header);
-
 #endif
