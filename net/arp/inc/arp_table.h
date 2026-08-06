@@ -39,7 +39,11 @@ typedef struct arp_entry
 
 void arp_table_init();
 
-bool arp_table_lookup(ipv4_addr_t ip, mac_addr_t *mac);
+arp_entry_t *arp_table_lookup(ipv4_addr_t ip);
+
+/* if using insert, caller probably needs to use this entry immediately, so return
+   a pointer to the new entry instead of just bool */
+arp_entry_t *arp_table_insert(ipv4_addr_t ip);
 
 
 #endif

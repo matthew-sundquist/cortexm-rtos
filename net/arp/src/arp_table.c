@@ -11,6 +11,10 @@
 
 static arp_entry_t *find_entry(ipv4_addr_t ip);
 
+static arp_entry_t *insert_entry(ipv4_addr_t ip);
+
+static arp_entry_t *replace_entry(ipv4_addr_t old_ip, ipv4_addr_t new_ip);
+
 static inline bool entry_expired(const arp_entry_t *entry);
 
 // initial implementation to just be an array
@@ -26,25 +30,14 @@ void arp_table_init()
     memset(arp_table.entries, 0, sizeof(arp_table.entries));
 }
 
-bool arp_table_lookup(ipv4_addr_t ip, mac_addr_t *mac)
+arp_entry_t *arp_table_lookup(ipv4_addr_t ip)
 {
-    ASSERT(mac != NULL);
+    return find_entry(ip);
+}
 
-    arp_entry_t *entry = find_entry(ip);
-
-    if (!entry)
-    {
-        return false;
-    }
-
-    if (entry_expired(entry))
-    {
-        return false;
-    }
-
-    memcpy(mac, entry->mac.bytes, MAC_ADDR_LEN_BYTES);
-
-    return true;
+arp_entry_t *arp_table_insert(ipv4_addr_t ip)
+{
+    return insert_entry(ip);
 }
 
 static arp_entry_t *find_entry(ipv4_addr_t ip)
@@ -60,15 +53,28 @@ static arp_entry_t *find_entry(ipv4_addr_t ip)
     return NULL;
 }
 
-static inline bool entry_expired(const arp_entry_t *entry)
+static arp_entry_t *insert_entry(ipv4_addr_t ip)
 {
-    ASSERT(entry != NULL);
-
-    if (get_ticks() - entry->last_used_tick > ARP_CACHE_TIMEOUT_MS)
+    arp_entry_t *oldest_entry = arp_table.entries[0];
+    for (int i = 0; i < ARP_TABLE_MAX_SIZE; i++)
     {
-        return true;
-    }
-    
-    return false;
-}
+        ipv4_addr_t arp_entry_ip = arp_table.entries[i].ip;
+        if (!(uint32_t) arp_entry_ip.bytes)
+        {
+            arp_table.entries[i].ip = ip;
+            return &arp_table.entries[i];
+        }
 
+        if ((uint32_t) arp_entry_ip.bytes == (uint32_t)ip.bytes)
+        {
+            return &arp_table.entries[i];
+        }
+
+        if ((uint32_t)arp_entry_ip.bytes == 0 && arp_table.entries[i].last_used_tick < oldest_entry->last_used_tick)
+        {
+            oldest_entry = &arp_table.entries[i];
+        }
+    }
+
+
+}
