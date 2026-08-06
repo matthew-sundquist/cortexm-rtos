@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MAC_ADDR_LEN_BYTES 6
+#define IPV4_ADDR_LEN_BYTES 4
+
 typedef enum arp_state 
 {
     ARP_NONE,
@@ -14,12 +17,12 @@ typedef enum arp_state
 
 typedef struct mac_addr
 {
-    uint8_t bytes[6];
+    uint8_t bytes[MAC_ADDR_LEN_BYTES];
 } mac_addr_t;
 
 typedef struct ipv4_addr
 {
-    uint8_t bytes[4];
+    uint8_t bytes[IPV4_ADDR_LEN_BYTES];
 } ipv4_addr_t;
 
 typedef struct arp_entry
@@ -34,9 +37,9 @@ typedef struct arp_entry
 
 // arp table implemented as opaque object
 
-void arp_init();
+void arp_table_init();
 
-bool arp_lookup(ipv4_addr_t ip, mac_addr_t *mac);
+bool arp_table_lookup(ipv4_addr_t ip, mac_addr_t *mac);
 
 
 #endif
