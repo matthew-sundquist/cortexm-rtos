@@ -13,11 +13,7 @@ static arp_entry_t *find_entry(ipv4_addr_t ip);
 
 static arp_entry_t *insert_entry(ipv4_addr_t ip);
 
-static arp_entry_t *replace_entry(ipv4_addr_t old_ip, ipv4_addr_t new_ip);
-
 static inline void reset_entry(arp_entry_t *entry);
-
-static inline bool entry_expired(const arp_entry_t *entry);
 
 // initial implementation to just be an array
 typedef struct arp_table
@@ -29,7 +25,10 @@ static arp_table_t arp_table;
 
 void arp_table_init()
 {
-    memset(arp_table.entries, 0, sizeof(arp_table.entries));
+    for (int i = 0; i < ARP_TABLE_MAX_SIZE; i++)
+    {
+        reset_entry(&arp_table.entries[i]);
+    }
 }
 
 arp_entry_t *arp_table_lookup(ipv4_addr_t ip)
@@ -80,7 +79,7 @@ static arp_entry_t *insert_entry(ipv4_addr_t ip)
 
     reset_entry(oldest_entry);
 
-    oldest_entry.ip = ip;
+    oldest_entry->ip = ip;
 
     return oldest_entry;
 }
