@@ -15,6 +15,8 @@ static arp_entry_t *insert_entry(ipv4_addr_t ip);
 
 static arp_entry_t *replace_entry(ipv4_addr_t old_ip, ipv4_addr_t new_ip);
 
+static inline void reset_entry(arp_entry_t *entry);
+
 static inline bool entry_expired(const arp_entry_t *entry);
 
 // initial implementation to just be an array
@@ -55,7 +57,7 @@ static arp_entry_t *find_entry(ipv4_addr_t ip)
 
 static arp_entry_t *insert_entry(ipv4_addr_t ip)
 {
-    arp_entry_t *oldest_entry = arp_table.entries[0];
+    arp_entry_t *oldest_entry = &arp_table.entries[0];
     for (int i = 0; i < ARP_TABLE_MAX_SIZE; i++)
     {
         ipv4_addr_t arp_entry_ip = arp_table.entries[i].ip;
@@ -76,5 +78,15 @@ static arp_entry_t *insert_entry(ipv4_addr_t ip)
         }
     }
 
+    reset_entry(oldest_entry);
 
+    oldest_entry.ip = ip;
+
+    return oldest_entry;
 }
+
+static inline void reset_entry(arp_entry_t *entry)
+{
+    memset(entry, 0, sizeof(arp_entry_t));
+}
+
