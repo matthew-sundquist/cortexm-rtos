@@ -3,11 +3,8 @@
 
 #include "arp_table.h"
 #include "assert.h"
-#include "scheduler.h"
 
 #define ARP_TABLE_MAX_SIZE 30
-
-#define ARP_CACHE_TIMEOUT_MS (60 * 1000) // hopefully replace 1000 with macro in future
 
 static arp_entry_t *find_entry(ipv4_addr_t ip);
 
