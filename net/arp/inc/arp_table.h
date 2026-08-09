@@ -45,5 +45,4 @@ arp_entry_t *arp_table_lookup(ipv4_addr_t ip);
    a pointer to the new entry instead of just bool */
 arp_entry_t *arp_table_insert(ipv4_addr_t ip);
 
-
 #endif

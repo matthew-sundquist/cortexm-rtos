@@ -5,11 +5,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "arp_table.h" 
+#include "arp_table.h"
+#include "netbuf.h"
 
 /* responsible for checking arp table, and in the case of failure, 
  * sending the arp broadcast*/
 bool arp_resolve_mac(ipv4_addr_t ip, mac_addr_t *mac);
 
+bool arp_recv_packet(netbuf_t *nbuf);
 
 #endif

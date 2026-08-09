@@ -4,14 +4,14 @@ KERNEL_INC = -Ikernel/core/inc -Ikernel/sync/inc -Ikernel/task/inc -Ikernel/util
 ARCH_INC = -Iarch/cortex-m4/CMSIS/Device/ST/STM32L4xx/Include -Iarch/cortex-m4/CMSIS/Include -Iarch/cortex-m4/inc
 TESTING_INC = -Itesting/inc
 DRIVER_INC = -Idrivers/usart/inc
-NET_INC = -Inet/common/inc -Inet/arp/inc -Inet/ethernet/inc
+NET_INC = -Inet/common/inc -Inet/arp/inc -Inet/ethernet/inc -Inet/ip/inc
 COMMON_INC = -Icommon/ts_queue/inc
 
 KERNEL_SRC = kernel/core/src kernel/sync/src kernel/task/src kernel/util/src
 ARCH_SRC = arch/cortex-m4/src arch/cortex-m4/startup
 TESTING_SRC = testing/src
 DRIVER_SRC = drivers/usart/src
-NET_SRC = net/common/src net/ethernet/src net/arp/src
+NET_SRC = net/common/src net/ethernet/src net/arp/src net/ip/src
 COMMON_SRC = common/ts_queue/src
 
 SRC_DIRS = $(KERNEL_SRC) $(ARCH_SRC) $(TESTING_SRC) $(DRIVER_SRC) $(NET_SRC) $(COMMON_SRC)
