@@ -5,7 +5,7 @@
 // arbitrarily chosen, should be the max amount of netbufs allocated
 #define SEM_MAX_COUNT 1000
 
-#define container_of(ptr, type, member) \ 
+#define container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - offsetof(type, member)))
 
 bool netqueue_init(netqueue_t *nq)
