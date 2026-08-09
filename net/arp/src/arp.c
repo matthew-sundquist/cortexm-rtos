@@ -1,5 +1,7 @@
 
+#include <arpa/inet.h>
 #include <string.h>
+
 #include "arp.h"
 #include "frame.h"
 #include "assert.h"
@@ -76,11 +78,11 @@ static arp_header_t arp_build_header(const uint8_t *sha, const uint8_t *spa, con
     ASSERT(tha != NULL);
     ASSERT(tpa != NULL);
     arp_header_t ret = (arp_header_t) {
-        .hrd = HARDWARE_ADDR_SPACE_ETHERNET,
-        .pro = ETHERTYPE_IPV4,
+        .hrd = htons(HARDWARE_ADDR_SPACE_ETHERNET),
+        .pro = htons(ETHERTYPE_IPV4),
         .hln = 6,
         .pln = 4,
-        .opcode = REQUEST,
+        .opcode = htons(REQUEST),
     };
 
     memcpy(ret.sha, sha, ret.hln);
