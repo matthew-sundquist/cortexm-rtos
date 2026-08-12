@@ -6,8 +6,11 @@
 #define IPV4_FIELD_TYPE(field) \
     typeof(((ipv4_header_t *)0)->field)
 
-#define IPV4_COMPUTE_MASK(field) \
-    (((1u << field##_LEN_BITS) - 1) << field##_BIT_OFFSET)
+#define IPV4_COMPUTE_MASK(bit_len, bit_offset) \
+    (((1u << (bit_len)) - 1) << bit_offset)
+
+#define IPV4_HEADER_PARSE_FIELD(field, data, byte_offset, bit_offset, bit_len) \
+    ((*(IPV4_FIELD_TYPE *)((data) + (byte_offset)) & IPV4_COMPUTE_MASK(bit_offset, bit_len)))
 
 typedef struct __attribute__((packed)) ipv4_header_wire 
 {
@@ -45,9 +48,4 @@ ipv4_header_status_t ipv4_parse_header(const uint8_t *data, size_t len, ipv4_hea
 static inline IPV4_FIELD_TYPE(version) parse_version(const uint8_t *data)
 {
     return *(data + offsetof(ipv4_header_wire_t, ver_ihl)) >> VER_LEN_BITS;
-}
-
-static inline IPV4_FIELD_TYPE(ihl) parse_ihl(const uint8_t *data)
-{
-    return *(data + offsetof(ipv4_header_wire_t, ver_ihl)) >> IHL_BIT_OFFSET;
 }
