@@ -5,8 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "ipv4.h"
+
 #define MAC_ADDR_LEN_BYTES 6
-#define IPV4_ADDR_LEN_BYTES 4
 
 typedef enum arp_state 
 {

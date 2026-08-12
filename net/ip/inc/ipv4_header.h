@@ -34,6 +34,8 @@ typedef struct ipv4_header
     uint16_t checksum;
     ipv4_addr_t src_addr;
     ipv4_addr_t dst_addr;
-};
+} ipv4_header_t;
+
+ipv4_header_status_t ipv4_parse_header(const uint8_t *data, size_t len, ipv4_header_t *header);
 
 #endif
