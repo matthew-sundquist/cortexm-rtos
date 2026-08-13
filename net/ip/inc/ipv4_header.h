@@ -16,7 +16,7 @@ typedef enum {
     IPV4_HEADER_ERR_SHORT,
     IPV4_HEADER_ERR_INVALID_CHECKSUM,
     IPV4_HEADER_ERR_INVALID_VERSION,
-    IPV4_HEADER_ERR_INVALID_IHL
+    IPV4_HEADER_ERR_INVALID_IHL,
 } ipv4_header_status_t;
 
 typedef struct ipv4_header
@@ -26,7 +26,7 @@ typedef struct ipv4_header
     uint8_t dscp;
     uint8_t ecn;
     uint16_t total_length;
-    uint16_t identification;
+    uint16_t id;
     uint8_t flags;
     uint16_t fragment_offset;
     uint8_t ttl;
