@@ -4,16 +4,7 @@
 #include "ipv4_header.h"
 #include "assert.h"
 
-#define IPV4_FIELD_TYPE(field) \
-    typeof(((ipv4_header_t *)0)->field)
-
-#define IPV4_COMPUTE_MASK(bit_len, bit_offset) \
-    (((1u << (bit_len)) - 1) << bit_offset)
-
-#define IPV4_HEADER_PARSE_FIELD(field, data, byte_offset, bit_offset, bit_len) \
-    ((*(IPV4_FIELD_TYPE(field) *)((data) + (byte_offset)) & IPV4_COMPUTE_MASK(bit_offset, bit_len)))
-
-typedef struct __attribute__((packed)) ipv4_header_wire 
+typedef struct __attribute__(aligned(4)) ipv4_header_wire 
 {
     uint8_t ver_ihl;
     uint8_t dscp_ecn;
@@ -79,32 +70,40 @@ ipv4_header_status_t ipv4_parse_header(const uint8_t *data, size_t len, ipv4_hea
     ASSERT(data != NULL);
     ASSERT(len > 0);
 
-    header->version = IPV4_HEADER_PARSE_FIELD(version, data, offsetof(ipv4_header_wire_t, ver_ihl), VER_BIT_OFFSET, VER_LEN_BITS);
+    // subsequent accesses from this struct should be safe due to this struct being aligned to a 4 byte boundry
+    // should be no risk of unaligned accesses
+    ipv4_header_wire_t *wire_header = (ipv4_header_wire_t *) data;
 
-    if (header->version != 4)
+    header->version = wire_header->ver_ihl & 0x0F;
+    
+    if (version != 4)
     {
         return IPV4_HEADER_ERR_INVALID_VERSION;
     }
 
-    header->ihl = IPV4_HEADER_PARSE_FIELD(ihl, data, offsetof(ipv4_header_wire_t, ver_ihl), IHL_BIT_OFFSET, IHL_LEN_BITS);
+    header->ihl = (wire_header->ver_ihl & 0xF0) >> 4;
 
     if (header->ihl < 5)
     {
         return IPV4_HEADER_ERR_INVALID_IHL;
     }
 
-    header->dscp = IPV4_HEADER_PARSE_FIELD(dscp, data, offsetof(ipv4_header_wire_t, dscp_ecn), DSCP_BIT_OFFSET, DSCP_LEN_BITS);
-    header->ecn = IPV4_HEADER_PARSE_FIELD(ecn, data, offsetof(ipv4_header_wire_t, dscp_ecn), ECN_BIT_OFFSET, ECN_LEN_BITS);
-    header->total_length = IPV4_HEADER_PARSE_FIELD(total_length, data, offsetof(ipv4_header_wire_t, len), LEN_BIT_OFFSET, LEN_LEN_BITS);
+    header->dscp = wire_header->dscp_ecn >> 2;
+
+    header->ecn = wire_header->dscp_ecn & 0x03;
+
+    header->total_length = wire_header->len;
+
     if (header->total_length < MIN_IPV4_PACKET_LEN)
     {
         return IPV4_HEADER_ERR_SHORT;
     }
 
-    header->id = IPV4_HEADER_PARSE_FIELD(id, data, offsetof(ipv4_header_wire_t, id), ID_BIT_OFFSET, ID_LEN_BITS);
-    header->flags = IPV4_HEADER_PARSE_FIELD(flags, data, offsetof(ipv4_header_wire_t, flags_fragoffset), FLAGS_BIT_OFFSET, FLAGS_LEN_BITS);
+    header->id = wire_header->id;
 
-    header->fragment_offset = IPV4_HEADER_PARSE_FIELD(fragment_offset, data, offsetof(ipv4_header_wire_t, flags_fragoffset), FRAGOFFSET_BIT_OFFSET, FRAGOFFSET_LEN_BITS);
+    header->flags = wire_header->flags_fragoffset >> 13;
     
+    header->fragment_offset = wire_header->flags_fragoffset & ~0xE000;
+
     return IPV4_HEADER_OK;
 }
