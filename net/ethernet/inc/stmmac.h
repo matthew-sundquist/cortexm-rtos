@@ -1,0 +1,27 @@
+#ifndef STMMAC_H
+#define STMMAC_H
+
+#define ETH_MACCR 0x0U
+#define ETH_MACFFR 0x4U
+#define ETH_MACHTHR 0X8U
+#define ETH_MACHTLR 0xCU
+#define ETH_MACMIIAR 0x10U
+#define ETH_MACMIIDR 0x14U
+#define ETH_MACFCR 0x18U
+#define ETH_MACVLANTR 0x1CU
+#define ETH_MACRWUFFR 0x28U
+#define ETH_MACPMTCSR 0x2CU
+#define ETH_MACDBGR 0x34U
+#define ETH_MACSR 0x38U
+#define ETH_MACIMR 0x3CU
+#define ETH_MACA0HR 0x40U
+#define ETH_MACA0LR 0x44U
+#define ETH_MACA1HR 0x48U
+#define ETH_MACA1LR 0x4CU
+#define ETH_MACA2HR 0x50U
+#define ETH_MACA2LR 0x54U
+#define ETH_MACA3HR 0x58U
+#define ETH_MACA3LR 0x5CU
+#define ETH_MMCCR 0x0100U
+
+#endif
