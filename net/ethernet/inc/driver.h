@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "frame.h"
 #include "netbuf.h"
 #include "netqueue.h"
 #include "stmmac.h"
 
-
+void ethernet_mac_init();
 
 #endif
