@@ -10,8 +10,36 @@
 #define ETH_MACCR_OFFSET 0x0U
 #define ETH_MACCR REG32(ETH_MAC_BASE_ADDR + ETH_MACCR_OFFSET)
 
+#define ETH_MACCR_CSTF (1U << 25) // CRC stripping
+#define ETH_MACCR_WD (1U << 23) // Watchdog disable
+#define ETH_MACCR_JD (1U << 22) // Jabber disable
+#define ETH_MACCR_IFG (1U << 17) // Interframe gap
+#define ETH_MACCR_FES (1U << 14) // Fast ethernet speed
+#define ETH_MACCR_ROD (1U << 13) // Recieve own disable
+#define ETH_MACCR_LM (1U << 12) // Loopback Mode
+#define ETH_MACCR_DM (1U << 11) // Duplex Mode
+#define ETH_MACCR_IPCO (1U << 10) // IPv4 checksum offload
+#define ETH_MACCR_RD (1U << 9) // Retry disable
+#define ETH_MACCR_APCS (1U << 7) // Automatic Pad / CRC strip
+#define ETH_MACCR_BL (1U << 5) // Back-off Limit
+#define ETH_MACCR_DC (1U << 4) // Deferral Check
+#define ETH_MACCR_TE (1U << 3) // Transmitter Enable
+#define ETH_MACCR_RE (1U << 2) // Reciever Enable
+
 #define ETH_MACFFR_OFFSET 0x4U
 #define ETH_MACFFR REG32(ETH_MAC_BASE_ADDR + ETH_MACFFR_OFFSET)
+
+#define ETH_MACFFR_RA (1U << 31) // Receive All
+#define ETH_MACFFR_HPF (1U << 10) // Hash or Perfect filter
+#define ETH_MACFFR_SAF (1U << 9) // Source address filter
+#define ETH_MACFFR_SAIF (1U << 8) // Source address inverse filtering
+#define ETH_MACFFR_PCF (1U << 6) // Pass control frames
+#define ETH_MACFFR_BFD (1U << 5) // Broadcast frames disable
+#define ETH_MACFFR_PAM (1U << 4) // Pass all multicast
+#define ETH_MACFFR_DAIF (1U << 3) // Destination address inverse filtering
+#define ETH_MACFFR_HM (1U << 2) // Hash multicast
+#define ETH_MACFFR_HU (1U << 1) // Hash unicast
+#define ETH_MACFFR_PM (1U << 0) // Promiscous Mode
 
 #define ETH_MACHTHR_OFFSET 0X8U
 #define ETH_MACHTHR REG32(ETH_MAC_BASE_ADDR + ETH_MACHTHR_OFFSET)
