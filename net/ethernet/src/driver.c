@@ -4,22 +4,44 @@
 #include "stmmac.h"
 #include "driver.h"
 
-static void tx_init();
+static void mac_tx_init();
 
-static void rx_init();
+static void mac_rx_init();
 
-static void enable_loopback();
+static void mac_enable_loopback();
 
 void ethernet_mac_init()
 {
+    RCC_AHB1ENR |= RCC_AHB1ENR_ETHMACEN;
+
+    (void)RCC_AHB1ENR;
+
     ETH_MACCR |= ETH_MACCR_FES; // 100 Mbit/s
     
     ETH_MACCR |= ETH_MACCR_DM; // enable duplex mode
+
+    mac_tx_init();
+    mac_rx_init();
+    mac_enable_loopback(); // for testing
 }
 
 
-static void tx_init()
+size_t ethernet_send(const uint8_t *data, size_t len) // should not copy
 {
+    return 0;
+}
+
+size_t ethernet_recv(uint8_t *data) // should just do data = dma ptr
+{
+    return 0;
+}
+
+static void mac_tx_init()
+{
+    RCC_AHB1ENR |= RCC_AHB1ENR_ETHMACTXEN;
+    
+    (void)RCC_AHB1ENR;
+
     ETH_MACCR &= ~ETH_MACCR_JD; // disable jabber, can send 16384 bytes
     
     // TODO: configure interframe gap
@@ -33,8 +55,12 @@ static void tx_init()
     ETH_MACCR |= ETH_MACCR_TE; // enable transmitter
 }
 
-static void rx_init()
+static void mac_rx_init()
 {
+    RCC_AHB1ENR |= RCC_AHB1ENR_ETHMACRXEN;
+
+    (void)RCC_AHB1ENR;
+
     ETH_MACCR |= ETH_MACCR_CSTF; // enable crc stripping
 
     ETH_MACCR &= ~ETH_MACCR_WD; // disable watchdog, can recv 16384 bytes
@@ -46,9 +72,7 @@ static void rx_init()
     ETH_MACCR |= ETH_MACCR_RE; // enable receiver
 }
 
-static void enable_loopback()
+static void mac_enable_loopback()
 {
     ETH_MACCR |= ETH_MACCR_LM; // enable loopback
-
-    // need to enable RX_CLK for loopback to work
 }
