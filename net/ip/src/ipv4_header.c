@@ -4,7 +4,7 @@
 #include "ipv4_header.h"
 #include "assert.h"
 
-typedef struct __attribute__(aligned(4)) ipv4_header_wire 
+typedef struct __attribute__((aligned(4))) ipv4_header_wire 
 {
     uint8_t ver_ihl;
     uint8_t dscp_ecn;
@@ -76,7 +76,7 @@ ipv4_header_status_t ipv4_parse_header(const uint8_t *data, size_t len, ipv4_hea
 
     header->version = wire_header->ver_ihl & 0x0F;
     
-    if (version != 4)
+    if (header->version != 4)
     {
         return IPV4_HEADER_ERR_INVALID_VERSION;
     }
