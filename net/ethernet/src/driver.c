@@ -10,6 +10,8 @@ static void mac_rx_init();
 
 static void mac_enable_loopback();
 
+static void dma_rx_init();
+
 void ethernet_mac_init()
 {
     RCC_AHB1ENR |= RCC_AHB1ENR_ETHMACEN;
@@ -75,4 +77,27 @@ static void mac_rx_init()
 static void mac_enable_loopback()
 {
     ETH_MACCR |= ETH_MACCR_LM; // enable loopback
+}
+
+
+static void dma_rx_init()
+{
+
+    ETH_DMAOMR |= ETH_DMAOMR_DTCEFD; // disable auto dropping IP due to checksum error
+    
+    ETH_DMAOMR |= ETH_DMAOMR_RSF; // only read from DMA if have full frame
+
+    ETH_DMAOMR |= ETH_DMAOMR_DFRF; // disable flushing of recv frames
+    // ETH_DMAOMR should be last
+    
+    ETH_DMAOMR |= ETH_DMAOMR_SR; // start recv
+}
+
+static void dma_tx_init()
+{
+    
+
+    ETH_DMAOMR |= ETH_DMAOMR_TSF; // transmission starts when full frame in FIFO
+
+    ETH_DMAOMR |= ETH_DMAOMR_ST; // start transmission
 }
