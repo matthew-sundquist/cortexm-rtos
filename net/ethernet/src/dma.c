@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "assert.h"
 #include "dma.h"
 #include "stmmac.h"
 #include "netbuf.h"
@@ -9,7 +10,7 @@
 #define NUM_RX_DESCRIPTORS 4
 #define NUM_TX_DESCRIPTORS 4
 
-#define MAX_BUFFER_SIZE 0x1FFF
+#define MAX_TX_BUF_LEN 0x1FFF
 
 #define OWN_BIT (1U << 31)
 #define TER_BIT (1U << 21)
@@ -25,9 +26,13 @@ static void dma_rx_init();
 
 static void dma_tx_init();
 
-static bool tx_desc_put_buffer(const void *data, size_t len);
+static inline void dma_tx_advance();
 
-static size_t rx_desc_get_buffer(const void **data);
+static inline void dma_rx_advance();
+
+static inline void dma_put_tx_buf(const void *data, size_t len);
+
+static inline size_t dma_get_rx_buf(void **data);
 
 static eth_dma_descriptor_t tx_descriptors[NUM_TX_DESCRIPTORS];
 static eth_dma_descriptor_t rx_descriptors[NUM_RX_DESCRIPTORS];
@@ -41,9 +46,59 @@ void ethernet_dma_init()
     dma_tx_init();
 }
 
+
+dma_status_t ethernet_dma_put(const netbuf_t *nbuf)
+{
+    ASSERT(nbuf != NULL);
+    ASSERT(nbuf->len > 0); // not sure if this should be here
+    ASSERT(nbuf->buf != NULL); // not sure if this should be here
+    
+    if (tx_current->desc[0] & OWN_BIT)
+    {
+        return DMA_BUSY;
+    }
+
+    // not supporting packets stretching across packets at the moment
+    if (nbuf->len > MAX_TX_BUF_LEN)
+    {
+        return DMA_UNSUPPORTED;
+    }
+
+    dma_put_tx_buf(nbuf->buf, nbuf->len);
+
+    tx_current->buf_owner = nbuf;
+
+    dma_tx_advance();
+
+    return DMA_OK;
+}
+
+// this implementation is wrong for anything over simple testing
+// this function is intended to take ownership of the netbuf stored in the 
+// rx descriptor in DMA. The buffer that is read in this function needs to be replaced
+// with another buffer somehow. Consider using netbuf_alloc.
+dma_status_t ethernet_dma_get(netbuf_t **nbuf)
+{
+    ASSERT(nbuf != NULL);
+
+    if (rx_current->desc[0] & OWN_BIT)
+    {
+        return DMA_ERROR; // maybe should be an assertion, or expand return type to support
+    }
+
+    // this expression gets rid of the need for calling dma_get_rx_buf
+    *nbuf = rx_current->buf_owner;
+
+    (*nbuf)->len = rx_current->desc[1] & 0x1FFF; // buffer 1 len
+    
+    dma_rx_advance();
+
+    return DMA_OK;
+}
+
 static void dma_rx_init()
 {
-    rx_current = rx_descriptors[0];
+    rx_current = &rx_descriptors[0];
 
     rx_descriptors[NUM_RX_DESCRIPTORS - 1].desc[1] |= RER_BIT; // check back on this, could be wrong
 
@@ -59,7 +114,7 @@ static void dma_rx_init()
 
 static void dma_tx_init()
 {
-    tx_current = tx_descriptors[0];
+    tx_current = &tx_descriptors[0];
 
     tx_descriptors[NUM_TX_DESCRIPTORS - 1].desc[0] |= OWN_BIT;
     
@@ -68,41 +123,37 @@ static void dma_tx_init()
     ETH_DMAOMR |= ETH_DMAOMR_ST; // start transmission
 }
 
-static bool tx_desc_put_buffer(const void *data, size_t len)
+static inline void dma_put_tx_buf(const void *data, size_t len)
 {
-    if (tx_current->desc[0] & OWN_BIT)
-    {
-        return false;
-    }
-
-    if (len > MAX_BUFFER_SIZE)
-    {
-        return false;
-    }
-
     tx_current->desc[1] = len;
     tx_current->desc[2] = (uint32_t)data;
-
-    tx_current->desc[0] |= OWN_BIT;
-
-    tx_current++;
-
-    if (tx_current > tx_descriptors[NUM_TX_DESCRIPTORS - 1])
-    {
-        tx_current = tx_descriptors[0];
-    }
-
-    return true;
 }
 
-static size_t rx_desc_get_buffer(const void **data)
+static inline size_t dma_get_rx_buf(void **data)
 {
-    size_t recvd_bytes = 0;
+    *data = (void *)rx_current->desc[2];
+    return (size_t)rx_current->desc[1] & 0x1FFF;
+}
 
-    if (rx_current->desc[0] & OWN_BIT)
+
+static inline void dma_rx_advance()
+{
+    if (rx_current->desc[1] & RER_BIT)
     {
-        return recvd_bytes;
+        rx_current = &rx_descriptors[0];
+        return;
     }
 
-    if ()
+    rx_current++;
+}
+
+static inline void dma_tx_advance()
+{
+    if (tx_current->desc[0] & TER_BIT)
+    {
+        tx_current = &tx_descriptors[0];
+        return;
+    }
+
+    tx_current++;
 }
