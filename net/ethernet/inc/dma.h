@@ -13,7 +13,7 @@ typedef enum {
 
 void ethernet_dma_init();
 
-dma_status_t ethernet_dma_put(const netbuf_t *nbuf);
+dma_status_t ethernet_dma_put(netbuf_t *nbuf);
 
 // this func will set the len inside netbuf to the len inside the rx descriptor
 // no need to return len here
