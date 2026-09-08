@@ -3,6 +3,14 @@
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
+
+#define DCIMVAC_ADDR 0xE000EF5C
+#define DCIMVAC REG32(DCIMVAC_ADDR) // coherency invalidation by addr
+
+#define DCCMVAC_ADDR 0xE000EF68
+#define DCCMVAC REG32(DCCMVAC_ADDR) // cache clean to PoC
+
+
 #define ETH_MAC_BASE_ADDR 0x40028000
 
 // MAC-RELATED DEFINES

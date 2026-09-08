@@ -20,11 +20,16 @@
 #define LS_BIT (1U << 29)
 #define FS_BIT (1U << 28)
 
+
 typedef struct eth_dma_descriptor
 {
     uint32_t desc[4];
     netbuf_t *buf_owner;
 } eth_dma_descriptor_t;
+
+static inline void invalidate_cache_line(void *addr);
+
+static inline void clean_cache_line(void *addr);
 
 static void dma_rx_init();
 
@@ -193,4 +198,22 @@ static inline bool dma_rx_is_last_desc(const eth_dma_descriptor_t *rx_desc)
     ASSERT(rx_desc != NULL);
 
     return rx_desc == &(rx_descriptors[NUM_RX_DESCRIPTORS - 1]);
+}
+
+static inline void invalidate_cache_line(void *addr)
+{
+    ASSERT(addr != NULL);
+
+    DCIMVAC = (uint32_t)addr;
+
+    __asm volatile ("dsb" ::: "memory"); // "memory" tells gcc to preserve ordering around dsb
+}
+
+static inline void clean_cache_line(void *addr)
+{
+    ASSERT(addr != NULL);
+
+    DCCMVAC = (uint32_t)addr;
+
+    __asm volatile ("dsb" ::: "memory");
 }
