@@ -89,6 +89,17 @@ dma_status_t ethernet_dma_put(netbuf_t *nbuf)
         tx_current->desc[0] |= TER_BIT;
     }
 
+#ifdef CACHE_ENABLED
+    clean_cache_line(&tx_current->desc[0]);
+    clean_cache_line(&tx_current->desc[1]);
+    clean_cache_line(&tx_current->desc[2]);
+    clean_cache_line(&tx_current->desc[3]);
+    
+    clean_cache_line(tx_current->buf_owner);
+#endif
+
+    tx_current->desc[0] |= OWN_BIT;
+
     dma_tx_advance(tx_current);
 
     return DMA_OK;
@@ -111,7 +122,9 @@ dma_status_t ethernet_dma_get(netbuf_t **nbuf)
     *nbuf = rx_current->buf_owner;
 
     (*nbuf)->len = rx_current->desc[1] & 0x1FFF; // buffer 1 len
-    
+
+    rx_current->desc[0] |= OWN_BIT;
+
     dma_rx_advance(rx_current);
 
     return DMA_OK;
