@@ -1,7 +1,7 @@
 
-#include config.mk
+include config.mk
 KERNEL_INC = -Ikernel/core/inc -Ikernel/sync/inc -Ikernel/task/inc -Ikernel/util/inc
-ARCH_INC = -Iarch/cortex-m4/CMSIS/Device/ST/STM32L4xx/Include -Iarch/cortex-m4/CMSIS/Include -Iarch/cortex-m4/inc
+ARCH_INC = -Iarch/cortex-m4/CMSIS/Device/ST/STM32L4xx/Include -Iarch/cortex-m4/CMSIS/Include -Iarch/cortex-m4/inc -Iarch/cortex-m4/CMSIS/Device/ST/STM32F767xx/Include
 TESTING_INC = -Itesting/inc
 DRIVER_INC = -Idrivers/usart/inc
 NET_INC = -Inet/common/inc -Inet/arp/inc -Inet/ethernet/inc -Inet/ip/inc
@@ -20,9 +20,9 @@ BUILD=build
 
 CC = arm-none-eabi-gcc
 AS = arm-none-eabi-gcc
-CPPFLAGS = $(KERNEL_INC) $(ARCH_INC) $(TESTING_INC) $(DRIVER_INC) $(NET_INC) $(COMMON_INC) -DSTM32L476xx
-CFLAGS = -pedantic -Wall -Wextra -mcpu=cortex-m4 -mthumb -ffreestanding
-ASFLAGS = -mcpu=cortex-m4 -mthumb
+CPPFLAGS += $(KERNEL_INC) $(ARCH_INC) $(TESTING_INC) $(DRIVER_INC) $(NET_INC) $(COMMON_INC) -DSTM32L476xx
+CFLAGS += -pedantic -Wall -Wextra -mcpu=cortex-m4 -mthumb -ffreestanding
+ASFLAGS += -mcpu=cortex-m4 -mthumb
 
 SRCS := $(foreach dir,$(SRC_DIRS),$(shell find $(dir) -type f -name "*.c"))
 SRCS_S := $(foreach dir,$(SRC_DIRS),$(shell find $(dir) -type f -name "*.s"))
@@ -40,7 +40,7 @@ debug: ASFLAGS += -Og -g
 debug: debug.elf
 
 debug.elf: $(OBJS)
-	$(CC) $(OBJS) -T bsp/stm32l476rg/linker.ld -nostdlib -nostartfiles -ffreestanding -Wl,--gc-sections -mcpu=cortex-m4 -mthumb -lgcc -o $@
+	$(CC) $(OBJS) $(LDFLAGS) -nostdlib -nostartfiles -ffreestanding -Wl,--gc-sections -mthumb -lgcc -o $@
 
 $(BUILD)/%.o: %.c
 	@mkdir -p $(dir $@)
