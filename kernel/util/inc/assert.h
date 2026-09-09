@@ -1,5 +1,4 @@
-
-#include <stm32l4xx.h>
+#include "board_select.h"
 
 #ifdef UNIT_TESTS
 extern uint32_t num_errors;
