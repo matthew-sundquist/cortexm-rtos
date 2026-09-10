@@ -8,7 +8,7 @@
 #ifndef USART_H_
 #define USART_H_
 
-#include <stm32l4xx.h>
+#include <board_select.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "ring_buffer.h"

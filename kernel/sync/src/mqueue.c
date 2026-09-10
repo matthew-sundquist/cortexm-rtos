@@ -4,7 +4,7 @@
 #include "mqueue.h"
 #include <string.h>
 
-#include <stm32l4xx.h>
+#include <board_select.h>
 
 void mqueue_init(mqueue_t *mq, void *buffer, size_t ele_size, uint32_t capacity)
 {

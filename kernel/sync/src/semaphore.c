@@ -1,5 +1,5 @@
 
-#include <stm32l4xx.h>
+#include <board_select.h>
 #include "scheduler.h"
 #include "semaphore.h"
 #include "assert.h"

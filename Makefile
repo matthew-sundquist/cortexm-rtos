@@ -19,8 +19,8 @@ BUILD=build
 CC = arm-none-eabi-gcc
 AS = arm-none-eabi-gcc
 CPPFLAGS += $(KERNEL_INC) $(ARCH_INC) $(TESTING_INC) $(DRIVER_INC) $(NET_INC) $(COMMON_INC) 
-CFLAGS += -pedantic -Wall -Wextra -mcpu=cortex-m4 -mthumb -ffreestanding
-ASFLAGS += -mcpu=cortex-m4 -mthumb
+CFLAGS += -pedantic -Wall -Wextra -mthumb -ffreestanding
+ASFLAGS += -mthumb
 
 SRCS := $(foreach dir,$(SRC_DIRS),$(shell find $(dir) -type f -name "*.c"))
 SRCS_S := $(foreach dir,$(SRC_DIRS),$(shell find $(dir) -type f -name "*.s"))

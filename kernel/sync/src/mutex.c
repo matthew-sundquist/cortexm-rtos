@@ -4,7 +4,7 @@
 #include "scheduler.h"
 #include "task_queue.h"
 #include "tcb.h"
-#include <stm32l4xx.h>
+#include <board_select.h>
 
 void mutex_init(mutex_t *mut) {
   mut->owner_pid = 0;
