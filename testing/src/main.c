@@ -110,6 +110,7 @@ void idle_task_func(void)
 	}
 }
 
+/*
 void gpio_setup(void)
 {
     // 1. Enable clock for GPIOA
@@ -126,7 +127,7 @@ void gpio_setup(void)
     GPIOA->OTYPER &= ~(1U << 5);
     GPIOA->PUPDR  &= ~(3U << (5 * 2));
 }
-
+*/
 
 #ifdef UNIT_TESTS
 int main(void)
@@ -158,7 +159,7 @@ int main(void)
 	//gpio_setup();
 
 //    init_systick(SYSTICK_HZ); // enables the scheduler
-
+/*
 	uint8_t rx_buf[100];
 	uint8_t tx_buf[100];
 
@@ -216,5 +217,6 @@ int main(void)
 			__BKPT(0);
 		}
 	}
+    */
 }
 #endif
