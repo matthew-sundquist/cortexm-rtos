@@ -7,6 +7,9 @@
 #include "string.h"
 #include "mutex.h"
 #include "usart.h"
+#include "ethernet.h"
+#include "dma.h"
+#include "driver.h"
 
 #ifdef UNIT_TESTS
 #include "unit_tests.h"
@@ -218,5 +221,22 @@ int main(void)
 		}
 	}
     */
+
+    uint8_t data[5] = {1, 2, 3, 4, 5};
+
+    ethernet_mac_init();
+    ethernet_dma_init();
+
+    netbuf_t *nbuf = netbuf_alloc();
+
+    netbuf_push_front(nbuf, data, sizeof(data));
+
+    ethernet_dma_put(nbuf);
+
+    volatile uint32_t i = 0;
+    while (1)
+    {
+        i++;
+    }
 }
 #endif

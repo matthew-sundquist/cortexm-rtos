@@ -6,6 +6,7 @@
 #include "dma.h"
 #include "stmmac.h"
 #include "netbuf.h"
+#include "board_select.h"
 
 #define NUM_RX_DESCRIPTORS 4
 #define NUM_TX_DESCRIPTORS 4
@@ -15,6 +16,7 @@
 #define OWN_BIT (1U << 31)
 #define TER_BIT (1U << 21)
 #define RER_BIT (1U << 15)
+#define RCH_BIT (1U << 14)
 #define TCH_BIT (1U << 20)
 #define IC_BIT (1U << 30)
 #define LS_BIT (1U << 29)
@@ -58,8 +60,16 @@ void ethernet_dma_init()
 {
     dma_rx_init();
     dma_tx_init();
+
+    ETH_DMAIER |= (1 << 0) | (1 << 6); // enable RX and TX interrupt
+
+    NVIC_EnableIRQ(ETH_IRQn);
 }
 
+void ETH_IRQHandler()
+{
+    ASSERT(0);
+}
 
 dma_status_t ethernet_dma_put(netbuf_t *nbuf)
 {
@@ -122,6 +132,14 @@ dma_status_t ethernet_dma_get(netbuf_t **nbuf)
     *nbuf = rx_current->buf_owner;
 
     (*nbuf)->len = rx_current->desc[1] & 0x1FFF; // buffer 1 len
+    
+    netbuf_t *new_rx_buf = netbuf_alloc();
+
+    rx_current->buf_owner = new_rx_buf;
+
+    rx_current->desc[2] = (uint32_t)new_rx_buf->buf;
+
+    rx_current->desc[1] = (uint32_t)(new_rx_buf->cap) | RCH_BIT;
 
     rx_current->desc[0] |= OWN_BIT;
 
@@ -136,12 +154,29 @@ static void dma_rx_init()
 
     rx_descriptors[NUM_RX_DESCRIPTORS - 1].desc[1] |= RER_BIT; // check back on this, could be wrong
 
+    for (uint8_t i = 0; i < NUM_RX_DESCRIPTORS - 1; i++)
+    {
+        rx_descriptors[i].desc[0] |= OWN_BIT; // give ownership to DMA
+
+        rx_descriptors[i].desc[3] = (uint32_t)&rx_descriptors[i + 1].desc[0]; // setup descriptor ring
+        netbuf_t *nbuf = netbuf_alloc();
+
+        rx_descriptors[i].buf_owner = nbuf;
+
+        rx_descriptors[i].desc[2] = (uint32_t)nbuf->buf;
+
+        rx_descriptors[i].desc[1] = nbuf->cap | RCH_BIT;
+    }
+
     ETH_DMAOMR |= ETH_DMAOMR_DTCEFD; // disable auto dropping IP due to checksum error
     
     ETH_DMAOMR |= ETH_DMAOMR_RSF; // only read from DMA if have full frame
 
     ETH_DMAOMR |= ETH_DMAOMR_DFRF; // disable flushing of recv frames
-    // ETH_DMAOMR should be last
+
+    // need to set the first descriptor properly here
+
+    ETH_DMARDLAR = (uint32_t)&rx_descriptors[0].desc[0];
     
     ETH_DMAOMR |= ETH_DMAOMR_SR; // start recv
 }
@@ -158,6 +193,8 @@ static void dma_tx_init()
 
     ETH_DMAOMR |= ETH_DMAOMR_TSF; // transmission starts when full frame in FIFO
 
+    ETH_DMATDLAR = (uint32_t)tx_current;
+    
     ETH_DMAOMR |= ETH_DMAOMR_ST; // start transmission
 }
 
