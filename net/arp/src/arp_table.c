@@ -83,6 +83,21 @@ static arp_entry_t *insert_entry(ipv4_addr_t ip)
 
 static inline void reset_entry(arp_entry_t *entry)
 {
-    memset(entry, 0, sizeof(arp_entry_t));
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        entry->ip.bytes[i] = 0;
+    }
+
+    entry->last_used_tick = 0;
+
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        entry->mac.bytes[i] = 0;
+    }
+
+    entry->state = ARP_NONE;
+
+
+    //memset(entry, 0, sizeof(arp_entry_t));
 }
 

@@ -89,6 +89,27 @@ void turn_on_LED(void)
 	}
 }
 
+void test_ethernet(void)
+{
+    
+    uint8_t data[5] = {1, 2, 3, 4, 5};
+
+    ethernet_mac_init();
+    ethernet_dma_init();
+
+    netbuf_t *nbuf = netbuf_alloc();
+
+    netbuf_push_front(nbuf, data, sizeof(data));
+
+    ethernet_dma_put(nbuf);
+
+    volatile uint32_t i = 0;
+    while (1)
+    {
+        i++;
+    }
+}
+
 void turn_off_LED(void)
 {
 	while (1)
@@ -146,22 +167,25 @@ int main(void)
 int main(void)
 {
 
-	//init_scheduler();
+	init_scheduler();
 
 	//mutex_init(&test_mutex);
 	// Disable FPU (CP10 and CP11 Full Access clear)
 	// This forces the CPU to use standard 8-word hardware stacking
 	SCB->CPACR &= ~((3UL << 20) | (3UL << 22));
 
-//	int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "LED_on");
+    int status = task_create(&task_1, turn_on_LED, &arg_1, 1, task_1_sp, "ETH test");
+
+
 //	status += task_create(&task_2, turn_off_LED, &arg_2, 1, task_2_sp, "LED_off");
-//	status += task_create(&idle_task, idle_task_func, &arg_3, 0, idle_task_sp, "IDLE");
+    status += task_create(&idle_task, idle_task_func, &arg_3, 0, idle_task_sp, "IDLE");
 
 //	ASSERT(status == 0);
 
 	//gpio_setup();
+    //
 
-//    init_systick(SYSTICK_HZ); // enables the scheduler
+    init_systick(SYSTICK_HZ); // enables the scheduler
 /*
 	uint8_t rx_buf[100];
 	uint8_t tx_buf[100];
@@ -222,21 +246,5 @@ int main(void)
 	}
     */
 
-    uint8_t data[5] = {1, 2, 3, 4, 5};
-
-    ethernet_mac_init();
-    ethernet_dma_init();
-
-    netbuf_t *nbuf = netbuf_alloc();
-
-    netbuf_push_front(nbuf, data, sizeof(data));
-
-    ethernet_dma_put(nbuf);
-
-    volatile uint32_t i = 0;
-    while (1)
-    {
-        i++;
-    }
 }
 #endif

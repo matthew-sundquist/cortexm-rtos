@@ -1,7 +1,8 @@
 
+#include <stddef.h>
 #include "tcb.h"
-#include "string.h"
-#include <board_select.h>
+#include "board_select.h"
+#include "mem.h"
 
 uint32_t pid = 1;
 
@@ -47,8 +48,8 @@ void task_init(tcb_t *task, void(*entry)(void), uint32_t *arg, uint8_t priority,
 	pid++;
 	__enable_irq();
 
-	strncpy(task->name, name, sizeof(task->name));
+	//strncpy(task->name, name, sizeof(task->name));
 
-	task->name[sizeof(task->name)-1] = '\0';
+	//task->name[sizeof(task->name)-1] = '\0';
 
 }

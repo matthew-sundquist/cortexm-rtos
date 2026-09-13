@@ -37,7 +37,7 @@ SECTIONS
     } > FLASH
 
     /* Initialized data */
-    .data : AT (ADDR(.text) + SIZEOF(.text))
+    .data : AT (LOADADDR(.ARM.exidx) + SIZEOF(.ARM.exidx)) 
     {
         . = ALIGN(4);
         _sdata = .;
